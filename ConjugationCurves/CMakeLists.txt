@@ -1,7 +1,7 @@
 #General
 cmake_minimum_required(VERSION 3.0.0)
 
-project(RPLM.CAD.CurveConjugation LANGUAGES C CXX)
+project(RPLM.CAD.ConjugationCurves LANGUAGES C CXX)
 
 find_path(RPLM_CMAKE
 	NAMES 
@@ -37,4 +37,5 @@ GET_QT_PREFIX_PATH(QT_PATH)
 
 SET(CMAKE_PREFIX_PATH ${QT_PATH})
 
-RPLM_ADD_SUBDIRECTORY(Sample)
+# Указывается директория с исходными файлами проекта
+RPLM_ADD_SUBDIRECTORY(src)

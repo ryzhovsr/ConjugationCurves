@@ -1,6 +1,6 @@
 ﻿CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
-SET(PROJECT_NAME RPLM.CAD.CurveConjugation)
+SET(PROJECT_NAME RPLM.CAD.ConjugationCurves)
 
 file(GLOB_RECURSE HEADER_FILES Include/*.h)
 file(GLOB_RECURSE SOURCE_FILES Source/*.cpp Source/*.h)
