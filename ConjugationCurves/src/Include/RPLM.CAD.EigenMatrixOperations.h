@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RPLM.Sample.IMatrixOperations.h"
+#include "RPLM.CAD.IMatrixOperations.h"
 
 class EigenMatrixOperations final : public IMatrixOperations
 {

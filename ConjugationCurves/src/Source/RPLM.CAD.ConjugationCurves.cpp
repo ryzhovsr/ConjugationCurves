@@ -1,6 +1,6 @@
-#include "RPLM.Sample.ConjugateCurves.h"
+#include "RPLM.CAD.ConjugationCurves.h"
 #include <RGPSession.h>
-#include "RPLM.Sample.IMatrixOperations.h"
+#include "RPLM.CAD.IMatrixOperations.h"
 #include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
 
 namespace Sample

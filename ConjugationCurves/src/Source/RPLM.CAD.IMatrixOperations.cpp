@@ -1,4 +1,4 @@
-#include "RPLM.Sample.EigenMatrixOperations.h"
+#include "RPLM.CAD.EigenMatrixOperations.h"
 
 IMatrixOperationsPtr IMatrixOperations::GetMatrixOperationsClass(OperationClass className)
 {

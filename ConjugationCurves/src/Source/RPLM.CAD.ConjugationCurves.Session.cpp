@@ -1,4 +1,4 @@
-﻿#include "RPLM.Sample.Session.h"
+﻿#include "RPLM.CAD.ConjugationCurves.Session.h"
 #include "RPLM.Base.Framework/Common/RPLM.Base.Framework.ResourceDefs.h"
 
 namespace RPLM::CAD::DimensionChain::UI

@@ -6,9 +6,9 @@
 #include "RPLM.Shell.UI.MainWindowManager.h"
 #include <QtWidgets>
 #include <QDockWidget>
-#include "RPLM.CAD.UI.СonjugationCurvesCommand.h"
-#include "RPLM.Sample.UI.Resources.h"
-#include "RPLM.Sample.Session.h"
+#include "RPLM.CAD.UI.СonjugationCurves.Command.h"
+#include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
+#include "RPLM.CAD.ConjugationCurves.Session.h"
 
 #ifdef _DEBUG
 #if defined(_MSC_VER)
