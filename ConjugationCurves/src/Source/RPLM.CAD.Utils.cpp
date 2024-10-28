@@ -1,26 +1,27 @@
 ﻿#include "RPLM.CAD.Utils.h"
 #include <fstream>
 
-namespace Sample
+namespace RPLM::CAD
 {
-	RGK::Vector<RGK::Math::Vector3D> Utils::readControlPointsFromFile(const RPLM::Base::Framework::String& iFilePath)
+	RGK::Vector<RGK::Math::Vector3D> Utils::readControlPointsFromFile(const Base::Framework::String& iFilePath)
 	{
-		std::string line;
-		std::ifstream in(iFilePath);
+		std::ifstream inStream(iFilePath);
 		RGK::Vector<RGK::Math::Vector3D> controlPoints;
 
 		// Счётчик координат
 		int coordinateCounter = 0;
+		// Размерность координат
+		const int coordinateDimension = 3;
 
-		if (in.is_open())
+		if (inStream.is_open())
 		{
 			RGK::Vector<double> temp;
 			double number = 0;
 
-			while (in >> number)
+			while (inStream >> number)
 			{
 				// Если все три координаты получены
-				if (coordinateCounter == 3)
+				if (coordinateCounter == coordinateDimension)
 				{
 					controlPoints.push_back(RGK::Math::Vector3D(temp[0], temp[1], temp[2]));
 					temp.clear();
@@ -32,50 +33,49 @@ namespace Sample
 			}
 
 			// Добавляем последнюю координату
-			if (coordinateCounter == 3)
+			if (coordinateCounter == coordinateDimension)
 			{
 				controlPoints.push_back(RGK::Math::Vector3D(temp[0], temp[1], temp[2]));
 			}
+
+			inStream.close();
 		}
 
-		in.close();
 		return controlPoints;
 	}
 
-	RPLM::Math::Geometry2D::Geometry::DoubleArray Sample::Utils::readKnotsFromFile(const RPLM::Base::Framework::String& iFilePath)
+	Math::Geometry2D::Geometry::DoubleArray Utils::readKnotsFromFile(const Base::Framework::String& iFilePath)
 	{
-		RPLM::Math::Geometry2D::Geometry::DoubleArray knots;
-		
-		std::string line;
-		std::ifstream in(iFilePath);
+		Math::Geometry2D::Geometry::DoubleArray knots;
+		std::ifstream inStream(iFilePath);
 
-		if (in.is_open())
+		if (inStream.is_open())
 		{
 			double number = 0;
 
-			while (in >> number)
+			while (inStream >> number)
 			{
 				knots.push_back(number);
 			}
-		}
 
-		in.close();
+			inStream.close();
+		}
 
 		return knots;
 	}
 
-	void Utils::writeControlPointsInFile(const RPLM::Base::Framework::String& iFilePath, const RGK::Vector<RGK::Math::Vector3D>& iControlPoints)
+	void Utils::saveControlPointsInFile(const Base::Framework::String& iFilePath, const RGK::Vector<RGK::Math::Vector3D>& iControlPoints)
 	{
-		std::ofstream outFile(iFilePath);
+		std::ofstream outStream(iFilePath);
 
-		if (outFile.is_open())
+		if (outStream.is_open())
 		{
 			for (const auto& curvePoints : iControlPoints)
 			{
-				outFile << curvePoints.GetX() << " " << curvePoints.GetY() << " " << curvePoints.GetZ() << '\n';
+				outStream << curvePoints.GetX() << " " << curvePoints.GetY() << " " << curvePoints.GetZ() << '\n';
 			}
 
-			outFile.close();
+			outStream.close();
 		}
 	}
 }

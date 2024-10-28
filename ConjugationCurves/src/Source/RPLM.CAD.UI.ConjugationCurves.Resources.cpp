@@ -8,7 +8,7 @@
 #include <QDockWidget>
 #include "RPLM.CAD.UI.СonjugationCurves.Command.h"
 #include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
-#include "RPLM.CAD.ConjugationCurves.Session.h"
+#include "RPLM.CAD.UI.ConjugationCurves.Session.h"
 
 #ifdef _DEBUG
 #if defined(_MSC_VER)
@@ -54,7 +54,7 @@ namespace RPLM::Shell::UI
 			return &_notify;
 		}
 
-		enum class RibbonPanelsEnum
+		enum class RibbonPanel
 		{
 			Model = 1
 		};
@@ -76,7 +76,7 @@ namespace RPLM::Shell::UI
 					session->AddTool(new RPLM::Shell::UI::Tool(toolID, _STRING("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, 0, false));
 				}
 
-				if (auto* category = session->GetToolbarsDefinition().GetRibbon().GetCategory(static_cast<int>(RibbonPanelsEnum::Model)))
+				if (auto* category = session->GetToolbarsDefinition().GetRibbon().GetCategory(static_cast<int>(RibbonPanel::Model)))
 				{
 					auto groupID = L"CAD.Modeling.Optional";
 
@@ -129,13 +129,11 @@ namespace RPLM::CAD::DimensionChain::Widgets
 		// Параметры подключения к серверу можно передавать в командной строке приложения, в котором запускаются модули платформы
 		void ReadCommandLineArguments(RPLM::Base::Framework::CommandLineArgumentsContext& iContext) override
 		{
-			
 		}
 
 		// Уведомление приложений о после запуска платформы и приложений
 		void AfterInitPlatform(const RPLM::Base::Framework::AfterInitPlatformContext& iContext) override
 		{
-
 		}
 
 		// Уведомление приложений перед завершением платформы

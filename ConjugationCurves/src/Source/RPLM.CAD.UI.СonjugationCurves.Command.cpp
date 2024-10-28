@@ -21,7 +21,7 @@
 #include "RPLM.EP.Model/Model/Representations/RGPPresentationContexts.h"
 #include "Model/Objects/RGPBodyObject.h"
 
-#define RSCADUIW(key)	RPLM::Base::Framework::GetModuleResource(L##key, L"RPLM.CAD.CurveConjugation")
+#define RSCADUIW(key)	RPLM::Base::Framework::GetModuleResource(L##key, L"RPLM.CAD.ConjugationCurves")
 
 namespace RPLM::CAD
 {
@@ -48,7 +48,7 @@ namespace RPLM::CAD
 			_selectObjectControl.SetPlaceholderText(RSCADUIW("SelectObject"));
 			//_dialog.AddControl(_selectObjectControl);
 
-			_filter = std::make_shared<DimensionSelectionFilter>();
+			_filter = std::make_shared<СonjugationCurvesSelectionFilter>();
 			_selected = std::make_shared<EP::Model::SelectionContainer>(GetDocument().get());
 
 			//// Степень кривой
@@ -89,11 +89,11 @@ namespace RPLM::CAD
 			_groupFixOrderDerivs.SetHidden(true);
 			_dialog.AddControl(_groupFixOrderDerivs);
 
-			_dialog.OnCloseEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnCloseDialog, this);
 			_ok.PressEvent = std::bind(&RPLMCADСonjugationCurvesCommand::onOK, this, std::placeholders::_1);
+			_dialog.OnCloseEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnCloseDialog, this);
 			_selectObjectControl.ClearObjectEvent = std::bind(&RPLMCADСonjugationCurvesCommand::onClearSelectObjectControl, this, std::placeholders::_1);
-			_selectObjectControl.FocusSetEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnFocusSelectObjectControl, this, std::placeholders::_1);
-			_buttonControlFixDerivatives.PressEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnFixateDerivates, this, std::placeholders::_1);
+			//_selectObjectControl.FocusSetEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnFocusSelectObjectControl, this, std::placeholders::_1);
+			//_buttonControlFixDerivatives.PressEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnFixateDerivates, this, std::placeholders::_1);
 
 			/// Получить путь к виду, на котором выполняется команда
 			///<returns>Путь (иерархия) видов, на котором выполняется команда</returns>
@@ -106,7 +106,114 @@ namespace RPLM::CAD
 
 		RPLMCADСonjugationCurvesCommand::~RPLMCADСonjugationCurvesCommand()
 		{
+		}
 
+		bool RPLMCADСonjugationCurvesCommand::Start(EP::UI::StartCommandParameters& iParameters)
+		{
+			if (!Command::Start(iParameters))
+			{
+				return false;
+			}
+
+			CreateCommandDialog(_dialog, GetMainWindow(), GetDocument());
+			_dialog.NeedToAdjust();
+			_dialog.Show();
+
+			return true;
+		}
+
+		void RPLMCADСonjugationCurvesCommand::Finish()
+		{
+			_dialog.Destroy();
+			SetPrompt(GetView(), _STR(""));
+			EmptyDynamicGraphics(GetView());
+			Command::Finish();
+			EP::Model::Session::GetSession()->GetExternal().DeleteUnusedData();
+		}
+
+		RPLM::EP::Model::ObjectSelectionPtr RPLMCADСonjugationCurvesCommand::SelectObject(RPLM::EP::UI::SelectObjectParameters& iParameters)
+		{
+			auto selection = iParameters.Selection();
+
+			if (auto objModel = std::dynamic_pointer_cast<RPLM::EP::Model::Object>(selection->GetObject()))
+			{
+				_selectObjectControl.SetObject(objModel);
+				_selectedCurve = objModel;
+			}
+
+			return selection;
+		}
+
+		RPLM::EP::Model::SelectionFilterPtr RPLMCADСonjugationCurvesCommand::GetFilter() const
+		{
+			return _filter;
+		}
+
+		void RPLMCADСonjugationCurvesCommand::onOK(EP::UI::ButtonControl& iControl)
+		{
+			//bool typeSpline;
+			//auto curve = std::static_pointer_cast<EP::Model::Curve2D>(_selectedCurve);
+			//curve->GetCurveData().GetSplineInterpolationType(typeSpline);
+
+			/*if (typeSpline && curve->GetDependencies())
+			{
+				EP::DoubleArray knots;
+
+				for (auto dep : curve->GetDependencies().Get())
+				{
+					auto interpolationDep = std::static_pointer_cast<RPLM::EP::Model::Curve>(dep);
+
+					if (interpolationDep == nullptr)
+						continue;
+
+					for (const auto knot : interpolationDep->GetKnots())
+					{
+						knots.push_back(knot->GetValue());
+					}
+
+					RGK::NURBSCurve origiganalCurve;
+					RGK::Vector<RGK::Math::Vector3D> controlPoints{};
+					RGK::NURBSCurve::Create(rgkContext, controlPoints, 3, {}, false, origiganalCurve);
+				}
+			}*/
+
+			{
+				// Получаем введённые значения из контролов
+				Base::Framework::String controlPointsPath = _controlPoints.GetFullName();
+				Base::Framework::String knotsPath = _knots.GetFullName();
+				int degree = _curveDegree.GetIntValue();
+
+				if (controlPointsPath.empty() || knotsPath.empty() || degree <= 0)
+				{
+					Terminate();
+					return;
+				}
+
+				// Считываем данные из файлов
+				RGK::Vector<RGK::Math::Vector3D> controlPoints = CAD::Utils::readControlPointsFromFile(controlPointsPath);
+				Math::Geometry2D::Geometry::DoubleArray knots = CAD::Utils::readKnotsFromFile(knotsPath);
+
+				RGK::Context rgkContext;
+				EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
+
+				// Создаём объект исходной кривой
+				RGK::NURBSCurve origiganalCurve;
+				bool isPeriodic = false;
+				RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, origiganalCurve);
+
+				bool isFixateBeginningCurve = _fixBeginningCurve.IsChecked();
+				bool isFixateEndCurve = _fixEndCurve.IsChecked();
+
+				// Выполнение сопряжения исходной кривой с фиксацией производных
+				RGK::NURBSCurve conjugatedCurve = Sample::ConjugationMethods::conjugateCurve(origiganalCurve, isFixateBeginningCurve, isFixateEndCurve);
+
+				// Записываем контрольные точки новой кривой в файл
+				//CAD::Utils::saveControlPointsInFile(_STRING("C:\\Work\\rplm.all\\src\\SampleRPLM\\TempFile.txt"), conjugatedCurve.GetControlPoints());
+
+				drawCurve(conjugatedCurve);
+			}
+
+			Terminate();
 		}
 
 		void RPLMCADСonjugationCurvesCommand::onClearSelectObjectControl(EP::UI::SingleObjectControl& iControl)
@@ -114,14 +221,17 @@ namespace RPLM::CAD
 			_selectObjectControl.Clear();
 			EP::Model::MarkContainer* container = GetMarkContainer();
 			container->RemoveAll(true);
-
-			CheckOKButton();
 		}
 
-		void RPLMCADСonjugationCurvesCommand::OnFixateDerivates(EP::UI::ButtonControl& iControl)
-		{
-			//_groupFixOrderDerivs.SetHidden(!_groupFixOrderDerivs.IsHidden());
-		}
+		//void RPLMCADСonjugationCurvesCommand::OnFocusSelectObjectControl(EP::UI::SingleObjectControl& iControl)
+		//{
+		//	_selectObjectControl.SetActive(true);
+		//}
+
+		//void RPLMCADСonjugationCurvesCommand::OnFixateDerivates(EP::UI::ButtonControl& iControl)
+		//{
+		//	_groupFixOrderDerivs.SetHidden(!_groupFixOrderDerivs.IsHidden());
+		//}
 
 		void RPLMCADСonjugationCurvesCommand::drawCurve(const RGK::NURBSCurve& iNurbs) const
 		{
@@ -179,120 +289,18 @@ namespace RPLM::CAD
 			edit.End(false);
 		}
 
-		bool RPLMCADСonjugationCurvesCommand::Start(EP::UI::StartCommandParameters& iParameters)
-		{
-			if (!Command::Start(iParameters))
-			{
-				return false;
-			}
-			
-			CreateCommandDialog(_dialog, GetMainWindow(), GetDocument());
-			_dialog.NeedToAdjust();
-			_dialog.Show();
-
-			CheckOKButton();
-
-			return true;
-		}
-
-		void RPLMCADСonjugationCurvesCommand::Finish()
-		{
-			_dialog.Destroy();
-			SetPrompt(GetView(), _STR(""));
-			EmptyDynamicGraphics(GetView());
-			Command::Finish();
-			EP::Model::Session::GetSession()->GetExternal().DeleteUnusedData();
-		}
-
-		void RPLMCADСonjugationCurvesCommand::OnFocusObjectElement(EP::UI::SingleObjectControl& iControl)
-		{
-			_selectObjectControl.SetActive(false);
-		}
-
-		void RPLMCADСonjugationCurvesCommand::OnFocusSelectObjectControl(EP::UI::SingleObjectControl& iControl)
-		{
-			_selectObjectControl.SetActive(true);
-		}
-
-		void RPLMCADСonjugationCurvesCommand::OnDischargeSingleObjectElement(EP::UI::SingleObjectControl& iControl)
+		/*void RPLMCADСonjugationCurvesCommand::OnDischargeSingleObjectElement(EP::UI::SingleObjectControl& iControl)
 		{
 			CheckOKButton();
 
 			EP::Model::MarkContainer* container = GetMarkContainer();
 			container->RemoveAll(true);
-		}
+		}*/
 
-		void RPLMCADСonjugationCurvesCommand::onOK(EP::UI::ButtonControl& iControl)
+		/*void RPLMCADСonjugationCurvesCommand::OnFocusObjectElement(EP::UI::SingleObjectControl& iControl)
 		{
-			//bool typeSpline;
-			//auto curve = std::static_pointer_cast<EP::Model::Curve2D>(_selectedCurve);
-			//curve->GetCurveData().GetSplineInterpolationType(typeSpline);
-
-			/*if (typeSpline && curve->GetDependencies())
-			{
-				EP::DoubleArray knots;
-
-				for (auto dep : curve->GetDependencies().Get())
-				{
-					auto interpolationDep = std::static_pointer_cast<RPLM::EP::Model::Curve>(dep);
-
-					if (interpolationDep == nullptr)
-						continue;
-
-					for (const auto knot : interpolationDep->GetKnots())
-					{
-						knots.push_back(knot->GetValue());
-					}
-
-					RGK::NURBSCurve origiganalCurve;
-					RGK::Vector<RGK::Math::Vector3D> controlPoints{};
-					RGK::NURBSCurve::Create(rgkContext, controlPoints, 3, {}, false, origiganalCurve);
-				}
-			}*/
-
-			{
-				// Получаем введённые значения из контролов
-				Base::Framework::String controlPointsPath = _controlPoints.GetFullName();
-				Base::Framework::String knotsPath = _knots.GetFullName();
-				int degree = _curveDegree.GetIntValue();
-
-				if (controlPointsPath.empty() || knotsPath.empty() || degree <= 0)
-				{
-					Terminate();
-					return;
-				}
-
-				// Считываем данные из файлов
-				RGK::Vector<RGK::Math::Vector3D> controlPoints = Sample::Utils::readControlPointsFromFile(controlPointsPath);
-				Math::Geometry2D::Geometry::DoubleArray knots = Sample::Utils::readKnotsFromFile(knotsPath);
-
-				RGK::Context rgkContext;
-				EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
-
-				// Создаём объект исходной кривой
-				RGK::NURBSCurve origiganalCurve;
-				bool isPeriodic = false;
-				RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, origiganalCurve);
-
-				bool isFixateBeginningCurve = _fixBeginningCurve.IsChecked();
-				bool isFixateEndCurve = _fixEndCurve.IsChecked();
-
-				// Выполнение сопряжения исходной кривой с фиксацией производных
-				RGK::NURBSCurve conjugatedCurve = Sample::ConjugationMethods::conjugateCurve(origiganalCurve, isFixateBeginningCurve, isFixateEndCurve);
-
-				// Записываем контрольные точки новой кривой в файл
-				Sample::Utils::writeControlPointsInFile(_STRING("C:\\Work\\rplm.all\\src\\SampleRPLM\\TempFile.txt"), conjugatedCurve.GetControlPoints());
-
-				drawCurve(conjugatedCurve);
-			}
-			
-			Terminate();
-		}
-
-		void RPLMCADСonjugationCurvesCommand::CheckOKButton()
-		{
-			//SetOKEnabled(_selectObjectControl.HasObject());
-		}
+			_selectObjectControl.SetActive(false);
+		}*/
 
 		bool RPLMCADСonjugationCurvesCommand::OnCloseDialog()
 		{
@@ -300,64 +308,12 @@ namespace RPLM::CAD
 			return false;
 		}
 
-		void RPLMCADСonjugationCurvesCommand::OnLayoutSelected(const RPLM::EP::Model::ObjectVector& iPathToLayout)
-		{
-			/*if (GetPathToLayout() == iPathToLayout)
-			{
-				if (_manipulator)
-					_manipulator->SetPathToLayout(iPathToLayout);
-				return;
-			}
-
-			bool activate = false;
-			if (_active)
-			{
-				if (GetCommand() && GetCommand()->GetView())
-				{
-					if (auto layout = GetCommand()->GetView()->GetActiveLayout())
-					{
-						if (!iPathToLayout.empty() && iPathToLayout.front() != layout)
-						{
-							activate = true;
-						}
-					}
-					else
-						activate = true;
-				}
-			}
-
-			SetPathToLayout(iPathToLayout, activate);
-			if (_manipulator)
-				_manipulator->SetPathToLayout(iPathToLayout);*/
-		}
-		
-		RPLM::EP::Model::ObjectSelectionPtr RPLMCADСonjugationCurvesCommand::SelectObject(RPLM::EP::UI::SelectObjectParameters& iParameters)
-		{
-			auto selection = iParameters.Selection();
-
-			if (auto objModel = std::dynamic_pointer_cast<RPLM::EP::Model::Object>(selection->GetObject()))
-			{
-				_selectObjectControl.SetObject(objModel);
-				_selectedCurve = objModel;
-			}
-
-			CheckOKButton();
-
-			return selection;
-		}
-
-		RPLM::EP::Model::SelectionFilterPtr RPLMCADСonjugationCurvesCommand::GetFilter() const
-		{
-			return _filter;
-		}
-							
-		RPLM::EP::Model::ObjectSelectionPtr DimensionSelectionFilter::Select(const RPLM::EP::Model::ObjectSelectionPtr& iSelectionObject)const
+		RPLM::EP::Model::ObjectSelectionPtr СonjugationCurvesSelectionFilter::Select(const RPLM::EP::Model::ObjectSelectionPtr& iSelectionObject) const
 		{
 			RPLM::EP::Model::ObjectPtr obj = iSelectionObject->GetObject();
 			RPLM::EP::Model::ObjectPtr objModel = std::dynamic_pointer_cast<RPLM::EP::Model::Object>(obj);
-			if (objModel != nullptr)
-				return iSelectionObject;
-			return nullptr;
+
+			return objModel != nullptr ? iSelectionObject : nullptr;
 		}
 	}
 }
