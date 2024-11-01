@@ -1,12 +1,12 @@
-#include "RPLM.CAD.ConjugationCurves.h"
+#include "RPLM.CAD.ConjugationMethod.h"
 #include <RGPSession.h>
 #include "RPLM.CAD.IMatrixOperations.h"
 #include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
 
-namespace Sample
+namespace RPLM::CAD::ConjugationCurves
 {
-    // Пространсто со вспомогательным функциями для сопряжения кривой
-    namespace ImplConjugateCurve
+    // Пространсто c функциями для реализации сопряжения
+    namespace ImplConjugationCurves
     {
         using DoubleArray = RPLM::Math::Geometry2D::Geometry::DoubleArray;
 
@@ -528,14 +528,14 @@ namespace Sample
         }
     }
 
-    RGK::NURBSCurve ConjugationMethods::conjugateCurve(const RGK::NURBSCurve& iCurve, bool fixBeginningCurve = false, bool fixEndCurve = false)
+    RGK::NURBSCurve ConjugationMethod::conjugateCurve(const RGK::NURBSCurve& iCurve, bool fixBeginningCurve = false, bool fixEndCurve = false)
     {
         // Разбиваем NURBS кривую на кривые Безье
-        RGK::Vector<RGK::NURBSCurve> bezierCurves = ImplConjugateCurve::splittingСurveIntoBezierCurves(iCurve);
+        RGK::Vector<RGK::NURBSCurve> bezierCurves = ImplConjugationCurves::splittingСurveIntoBezierCurves(iCurve);
 
         // Вычисляем базисные функции и их производные в параметре 1 (нулевая строка в basisFuncs - нулевые производные, первая строка в basisFuncs - первые произв. и т.д.)
         double curveParameter = 1;
-        RGK::Vector<RGK::Vector<double>> basisFuncs = ImplConjugateCurve::calculateBasisFuncs(bezierCurves[0], curveParameter);
+        RGK::Vector<RGK::Vector<double>> basisFuncs = ImplConjugationCurves::calculateBasisFuncs(bezierCurves[0], curveParameter);
 
         const size_t NUMBER_BASIS_FUNCS = static_cast<size_t>(iCurve.GetDegree()) + 1;                      // Количество базисных функций
         const size_t NUMBER_BEZIER_CURVES = bezierCurves.size();                                            // Количество кривых Безье
@@ -547,10 +547,10 @@ namespace Sample
         RGK::Vector<RGK::Vector<double>> coefficientMatrix(MATRIX_SIZE, RGK::Vector<double>(MATRIX_SIZE));
 
         // Заполняем матрицу коэффициентов
-        ImplConjugateCurve::fillCoefficientsMatrix(coefficientMatrix, basisFuncs, NUMBER_EPSILONS, NUMBER_BREAK_POINTS);
+        ImplConjugationCurves::fillCoefficientsMatrix(coefficientMatrix, basisFuncs, NUMBER_EPSILONS, NUMBER_BREAK_POINTS);
 
         // Фиксируем первую и последнюю точки у кривой и их первые производные
-        ImplConjugateCurve::fixPointsAtCurve(coefficientMatrix, NUMBER_EPSILONS, NUMBER_BASIS_FUNCS, fixBeginningCurve, fixEndCurve);
+        ImplConjugationCurves::fixPointsAtCurve(coefficientMatrix, NUMBER_EPSILONS, NUMBER_BASIS_FUNCS, fixBeginningCurve, fixEndCurve);
 
         // Контрольные точки кривых Безье
         RGK::Vector<RGK::Math::Vector3DArray> controlPointsBezierCurves(NUMBER_BEZIER_CURVES);
@@ -565,22 +565,22 @@ namespace Sample
 
         // Вычисляем реверсивные базисные функции и их производные в параметре 0
         curveParameter = 0;
-        RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = ImplConjugateCurve::calculateBasisFuncs(bezierCurves[0], curveParameter);
+        RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = ImplConjugationCurves::calculateBasisFuncs(bezierCurves[0], curveParameter);
 
         // Заполняем матрицу свободных членов
-        ImplConjugateCurve::fillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
+        ImplConjugationCurves::fillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
 
         // Вычисляем точки смещения для новых контрольных точек
-        RGK::Vector<RGK::Vector<double>> shiftPoints = ImplConjugateCurve::calculateShiftPoints(coefficientMatrix, freeMembersMatrix);
+        RGK::Vector<RGK::Vector<double>> shiftPoints = ImplConjugationCurves::calculateShiftPoints(coefficientMatrix, freeMembersMatrix);
 
         // Делаем сдивг исходных контрольных точек для сопряжения
-        ImplConjugateCurve::correctionPoints(controlPointsBezierCurves, shiftPoints, NUMBER_BEZIER_CURVES);
+        ImplConjugationCurves::correctionPoints(controlPointsBezierCurves, shiftPoints, NUMBER_BEZIER_CURVES);
 
         // Вычисляем новые кривые Безье, которые будут непрерывны
-        RGK::Vector<RGK::NURBSCurve> newBezierCurves = ImplConjugateCurve::createBezierCurves(controlPointsBezierCurves, NUMBER_BEZIER_CURVES, bezierCurves[0].GetDegree());
+        RGK::Vector<RGK::NURBSCurve> newBezierCurves = ImplConjugationCurves::createBezierCurves(controlPointsBezierCurves, NUMBER_BEZIER_CURVES, bezierCurves[0].GetDegree());
 
         // Представляем вектор кривых Безье как одну кривую NURBS
-        RGK::NURBSCurve merdgedCurve = ImplConjugateCurve::bezierCurvesToNURBSCurve(newBezierCurves, bezierCurves[0].GetDegree());
+        RGK::NURBSCurve merdgedCurve = ImplConjugationCurves::bezierCurvesToNURBSCurve(newBezierCurves, bezierCurves[0].GetDegree());
 
         return merdgedCurve;
     }

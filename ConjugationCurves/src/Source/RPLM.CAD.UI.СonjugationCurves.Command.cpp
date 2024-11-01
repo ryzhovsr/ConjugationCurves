@@ -1,6 +1,6 @@
 ﻿#include "RPLM.CAD.UI.СonjugationCurves.Command.h"
 #include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
-#include "RPLM.CAD.ConjugationCurves.h"
+#include "RPLM.CAD.ConjugationMethod.h"
 #include "RPLM.CAD.Utils.h"
 #include "Model/Filters/RGPSelectionFilter.h"
 #include "Model/RGPSession.h"	
@@ -20,6 +20,7 @@
 #include "Model/Representations/RGPModelScene.h"
 #include "RPLM.EP.Model/Model/Representations/RGPPresentationContexts.h"
 #include "Model/Objects/RGPBodyObject.h"
+#include <memory>
 
 #define RSCADUIW(key)	RPLM::Base::Framework::GetModuleResource(L##key, L"RPLM.CAD.ConjugationCurves")
 
@@ -203,9 +204,11 @@ namespace RPLM::CAD
 
 				bool isFixateBeginningCurve = _fixBeginningCurve.IsChecked();
 				bool isFixateEndCurve = _fixEndCurve.IsChecked();
+				
+				auto conjugetionMethod = std::make_unique<CAD::ConjugationCurves::ConjugationMethod>();
 
 				// Выполнение сопряжения исходной кривой с фиксацией производных
-				RGK::NURBSCurve conjugatedCurve = Sample::ConjugationMethods::conjugateCurve(origiganalCurve, isFixateBeginningCurve, isFixateEndCurve);
+				RGK::NURBSCurve conjugatedCurve = conjugetionMethod->conjugateCurve(origiganalCurve, isFixateBeginningCurve, isFixateEndCurve);
 
 				// Записываем контрольные точки новой кривой в файл
 				//CAD::Utils::saveControlPointsInFile(_STRING("C:\\Work\\rplm.all\\src\\SampleRPLM\\TempFile.txt"), conjugatedCurve.GetControlPoints());

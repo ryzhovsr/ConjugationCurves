@@ -6,7 +6,7 @@
 using namespace Eigen;
 
 // Переводит двумерный вектор в матрицу класса Eigen
-inline MatrixXd vector2DToMatrix(const IMatrixOperations::vector2D &vec2D)
+inline MatrixXd vector2DToMatrix(const IMatrixOperations::vector2D& vec2D)
 {
     size_t rows = vec2D.size(), cols = vec2D[0].size();
     MatrixXd matrix = MatrixXd::Constant(rows, cols, 0);
@@ -23,7 +23,7 @@ inline MatrixXd vector2DToMatrix(const IMatrixOperations::vector2D &vec2D)
 }
 
 // Переводит матрицу класса Eigen в двумерный вектор
-inline IMatrixOperations::vector2D matrixToVector2D(const MatrixXd &matrix)
+inline IMatrixOperations::vector2D matrixToVector2D(const MatrixXd& matrix)
 {
     auto rows = matrix.rows(), cols = matrix.cols();
     IMatrixOperations::vector2D vec2D(rows, std::vector<double>(cols));
@@ -39,7 +39,7 @@ inline IMatrixOperations::vector2D matrixToVector2D(const MatrixXd &matrix)
     return vec2D;
 }
 
-IMatrixOperations::vector2D EigenMatrixOperations::solveEquation(const vector2D &coefficients, const vector2D &freeMembers)
+IMatrixOperations::vector2D EigenMatrixOperations::solveEquation(const vector2D& coefficients, const vector2D& freeMembers)
 {
     // Переводим двумерные векторы в матрицу класса Eigen
     MatrixXd coefficientMatrix = vector2DToMatrix(coefficients);
@@ -55,13 +55,13 @@ IMatrixOperations::vector2D EigenMatrixOperations::solveEquation(const vector2D 
     return decisionVector2D;
 }
 
-double EigenMatrixOperations::getMatrixDet(const vector2D &vec2D)
+double EigenMatrixOperations::getMatrixDet(const vector2D& vec2D)
 {
     MatrixXd matrix = vector2DToMatrix(vec2D);
     return matrix.determinant();
 }
 
-int EigenMatrixOperations::getMatrixRank(const vector2D &matrix)
+int EigenMatrixOperations::getMatrixRank(const vector2D& matrix)
 {
     MatrixXd m = vector2DToMatrix(matrix);
     // Используем LU-разложение
