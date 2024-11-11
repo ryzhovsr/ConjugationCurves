@@ -84,7 +84,7 @@ namespace RPLM::Shell::UI
 					if (!category->GetGroup(groupID))
 					{
 						// Добавляем группу в категорию
-						auto* group = category->AddGroup(groupID, RSCADUIW("CAD.Modeling.Optional"));
+						auto* group = category->AddGroup(groupID, _STRING("CAD.Modeling.Optional"));
 
 						// Если в группе нет команды
 						if (group && !group->GetItem(toolID, false))
