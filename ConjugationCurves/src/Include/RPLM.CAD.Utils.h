@@ -1,4 +1,6 @@
-﻿#include <Common/RPLM.Base.Framework.String.h>
+﻿#pragma once
+
+#include <Common/RPLM.Base.Framework.String.h>
 #include <RGPSession.h>
 
 namespace RPLM::CAD
