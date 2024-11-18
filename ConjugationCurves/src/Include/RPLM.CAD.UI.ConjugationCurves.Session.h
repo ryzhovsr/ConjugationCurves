@@ -2,7 +2,7 @@
 
 #include "Common/RPLM.Base.Framework.String.h"
 
-namespace RPLM::CAD::DimensionChain
+namespace RPLM::CAD
 {
 	namespace UI
 	{

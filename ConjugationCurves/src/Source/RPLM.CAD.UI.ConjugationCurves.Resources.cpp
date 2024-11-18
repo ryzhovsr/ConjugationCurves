@@ -109,7 +109,7 @@ namespace RPLM::Shell::UI
 	};
 }
 
-namespace RPLM::CAD::DimensionChain::Widgets
+namespace RPLM::CAD::Widgets
 {
 	// <summary>Уведомления от сессии базового приложения</summary>
 	class SessionNotify : public RPLM::Base::Framework::ISessionNotify
@@ -142,10 +142,10 @@ namespace RPLM::CAD::DimensionChain::Widgets
 			// Отписываемся от уведомлений базового модуля
 			if (auto* session = RPLM::Base::Framework::Session::GetSession())
 			{
-				session->DisconnectSessionNotifyInterface(RPLM::CAD::DimensionChain::Widgets::SessionNotify::Instance());
+				session->DisconnectSessionNotifyInterface(RPLM::CAD::Widgets::SessionNotify::Instance());
 			}
 
-			RPLM::CAD::DimensionChain::UI::Session::Instance().Destroy();
+			RPLM::CAD::UI::Session::Instance().Destroy();
 		}
 	};
 }
@@ -153,18 +153,18 @@ namespace RPLM::CAD::DimensionChain::Widgets
 // <summary>Инициализация приложения</summary>
 RPLM_APP bool InitApplication(RPLM::Base::Framework::ApplicationInitContext* context)
 {
-	if (auto* dimChainSession = &RPLM::CAD::DimensionChain::UI::Session::Instance())
+	if (auto* session = &RPLM::CAD::UI::Session::Instance())
 	{
-		dimChainSession->Init();
+		session->Init();
 
 		// Идентификатор модуля
-		context->GetApplcation()->SetID(dimChainSession->GetModuleName());
+		context->GetApplcation()->SetID(session->GetModuleName());
 	}
 	
 	// Регистрация обработчика уведомлений от сессии базового приложения
 	if (auto* session = RPLM::Base::Framework::Session::GetSession())
 	{
-		session->ConnectSessionNotifyInterface(RPLM::CAD::DimensionChain::Widgets::SessionNotify::Instance());
+		session->ConnectSessionNotifyInterface(RPLM::CAD::Widgets::SessionNotify::Instance());
 	}
 
 	// Регистрация обработчика уведомлений пользовательского интерфейса базового модуля

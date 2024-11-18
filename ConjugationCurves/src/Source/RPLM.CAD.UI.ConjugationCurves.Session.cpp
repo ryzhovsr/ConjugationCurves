@@ -1,7 +1,7 @@
 ﻿#include "RPLM.CAD.UI.ConjugationCurves.Session.h"
 #include "RPLM.Base.Framework/Common/RPLM.Base.Framework.ResourceDefs.h"
 
-namespace RPLM::CAD::DimensionChain
+namespace RPLM::CAD
 {
 	namespace UI
 	{
