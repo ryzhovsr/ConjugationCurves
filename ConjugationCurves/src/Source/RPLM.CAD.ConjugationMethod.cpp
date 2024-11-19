@@ -1,7 +1,6 @@
 #include "RPLM.CAD.ConjugationMethod.h"
 #include "RPLM.CAD.IMatrixOperations.h"
 #include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
-#include <RGPSession.h>
 #include <RPLM.CAD.NURBSUtils.h>
 
 namespace RPLM::CAD::ConjugationCurves

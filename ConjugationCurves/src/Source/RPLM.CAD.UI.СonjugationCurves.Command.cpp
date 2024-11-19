@@ -2,27 +2,11 @@
 #include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
 #include "RPLM.CAD.ConjugationMethod.h"
 #include "RPLM.CAD.Utils.h"
-#include "Model/Filters/RGPSelectionFilter.h"
-#include "Model/RGPSession.h"	
-#include "Generators/WireBodyCreator.h"	
-#include "Model/Data/GeometryData.h" 
-#include "Model/Objects/RGPDimension.h"
-#include <Graphics/RGPGraphicsForward.h>
-#include "RPLM.UI.Widgets.MainWindow.h"
-#include "RPLM.Shell.UI.MainWindowManager.h"
+#include "Model/Objects/RGPBodyObject.h"
 #include "RPLM.EP.Model/Model/Document/RGPMarkContainer.h"
-#include "RPLM.EP.Common/Debug/RGPDebug.h"
-#include <qdockwidget.h>
-#include <qwidget.h>
-#include <string>
-#include <RPLM.EP.Model/Model/Dependencies/RGPInterpolationSpline.h>
 #include "Generators/BodyConstructor.h"
 #include "Model/Representations/RGPModelScene.h"
 #include "RPLM.EP.Model/Model/Representations/RGPPresentationContexts.h"
-#include "Model/Objects/RGPBodyObject.h"
-#include <memory>
-
-#define RSCADUIW(key)	RPLM::Base::Framework::GetModuleResource(L##key, L"RPLM.CAD.ConjugationCurves")
 
 namespace RPLM::CAD
 {

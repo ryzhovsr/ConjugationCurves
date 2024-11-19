@@ -1,14 +1,8 @@
-﻿#include "RPLM.Base.Framework.Session.h"
-#include "RGPUIData.h"
-#include "RPLM.Shell.UI.Contexts.h"
-#include "RPLM.Shell.UI.Session.h"
-#include "RPLM.UI.Widgets.MainWindow.h"
-#include "RPLM.Shell.UI.MainWindowManager.h"
-#include <QtWidgets>
-#include <QDockWidget>
-#include "RPLM.CAD.UI.СonjugationCurves.Command.h"
+﻿#include "RPLM.CAD.UI.СonjugationCurves.Command.h"
 #include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
 #include "RPLM.CAD.UI.ConjugationCurves.Session.h"
+#include "RPLM.UI.Widgets.MainWindow.h"
+#include "RGPUIData.h"
 
 #ifdef _DEBUG
 #if defined(_MSC_VER)
@@ -22,9 +16,6 @@
 #define new DEBUG_NEW
 #endif
 #endif
-
-#define RSCADUIW(key)	RPLM::Base::Framework::GetModuleResource(L##key, L"RPLM.CAD.CurveConjugation")
-#define RPLM_ACTIVE_MAIN_WIDGET (RPLM::UI::Widgets::MainWindow::Cast(RPLM::Shell::UI::MainWindowManager::Instance().GetActiveMainWindow()))
 
 namespace RPLM::Shell::UI
 {
@@ -73,7 +64,7 @@ namespace RPLM::Shell::UI
 				// Если команда не добавлена в сессию
 				if (!session->FindTool(toolID))
 				{
-					session->AddTool(new RPLM::Shell::UI::Tool(toolID, _STRING("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, 0, false));
+					session->AddTool(new RPLM::Shell::UI::Tool(toolID, RSCADUIW("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, 0, false));
 				}
 
 				if (auto* category = session->GetToolbarsDefinition().GetRibbon().GetCategory(static_cast<int>(RibbonPanel::Model)))
@@ -84,7 +75,7 @@ namespace RPLM::Shell::UI
 					if (!category->GetGroup(groupID))
 					{
 						// Добавляем группу в категорию
-						auto* group = category->AddGroup(groupID, _STRING("CAD.Modeling.Optional"));
+						auto* group = category->AddGroup(groupID, RSCADUIW("CAD.Modeling.Optional"));
 
 						// Если в группе нет команды
 						if (group && !group->GetItem(toolID, false))
