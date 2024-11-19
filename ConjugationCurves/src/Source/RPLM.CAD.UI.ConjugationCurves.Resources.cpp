@@ -31,8 +31,7 @@ namespace RPLM::Shell::UI
 	RPLM_APP void EnableCommandUpdater(ToolContext* iContext)
 	{
 		auto* tool = iContext->GetTool();
-		tool->SetEnabled(false);
-		tool->Update(iContext);
+		tool->SetEnabled(!tool->IsEnabled());
 	}
 
 	// <summary>Уведомления от пользовательского интерфеса базового приложения</summary>
@@ -64,7 +63,9 @@ namespace RPLM::Shell::UI
 				// Если команда не добавлена в сессию
 				if (!session->FindTool(toolID))
 				{
-					session->AddTool(new RPLM::Shell::UI::Tool(toolID, RSCADUIW("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, 0, false));
+					auto tool = new RPLM::Shell::UI::Tool(toolID, RSCADUIW("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, &EnableCommandUpdater);
+					tool->SetEnabled(false);
+					session->AddTool(tool);
 				}
 
 				if (auto* category = session->GetToolbarsDefinition().GetRibbon().GetCategory(static_cast<int>(RibbonPanel::Model)))
