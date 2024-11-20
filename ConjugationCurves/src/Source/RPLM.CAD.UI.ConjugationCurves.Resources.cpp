@@ -31,7 +31,7 @@ namespace RPLM::Shell::UI
 	RPLM_APP void EnableCommandUpdater(ToolContext* iContext)
 	{
 		auto* tool = iContext->GetTool();
-		tool->SetEnabled(!tool->IsEnabled());
+		tool->SetEnabled(true);
 	}
 
 	// <summary>Уведомления от пользовательского интерфеса базового приложения</summary>
@@ -64,7 +64,7 @@ namespace RPLM::Shell::UI
 				if (!session->FindTool(toolID))
 				{
 					auto tool = new RPLM::Shell::UI::Tool(toolID, RSCADUIW("CAD.Modeling.Optional.ConjugationCurves"), toolID, &CreateCommand, &EnableCommandUpdater);
-					tool->SetEnabled(false);
+					//tool->SetEnabled(false);
 					session->AddTool(tool);
 				}
 
