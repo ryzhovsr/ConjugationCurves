@@ -185,14 +185,11 @@ namespace RPLM::CAD
 				RGK::NURBSCurve origiganalCurve;
 				bool isPeriodic = false;
 				RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, origiganalCurve);
-
-				bool isFixateBeginningCurve = _fixBeginningCurve.IsChecked();
-				bool isFixateEndCurve = _fixEndCurve.IsChecked();
 				
 				auto conjugetionMethod = std::make_unique<CAD::ConjugationCurves::ConjugationMethod>();
 
 				// Выполнение сопряжения исходной кривой с фиксацией производных
-				RGK::NURBSCurve conjugatedCurve = conjugetionMethod->conjugateCurve(origiganalCurve, isFixateBeginningCurve, isFixateEndCurve);
+				RGK::NURBSCurve conjugatedCurve = conjugetionMethod->conjugateCurve(origiganalCurve, _fixBeginningCurve.IsChecked(), _fixEndCurve.IsChecked());
 
 				// Записываем контрольные точки новой кривой в файл
 				//CAD::Utils::saveControlPointsInFile(_STRING("C:\\Work\\rplm.all\\src\\SampleRPLM\\TempFile.txt"), conjugatedCurve.GetControlPoints());

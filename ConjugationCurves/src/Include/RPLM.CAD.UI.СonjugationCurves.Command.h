@@ -98,7 +98,7 @@ namespace RPLM::CAD
 			СonjugationCurvesSelectionFilter() {}
 			virtual ~СonjugationCurvesSelectionFilter() {}
 
-			bool Is3DSelect()const override
+			bool Is3DSelect() const override
 			{
 				return true;
 			}
