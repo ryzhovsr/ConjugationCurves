@@ -6,11 +6,11 @@ class EigenMatrixOperations final : public IMatrixOperations
 {
 public:
     // Решает СЛАУ
-    vector2D solveEquation(const vector2D& coefficients, const vector2D& freeMembers) override;
+    vector2D solveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers) override;
 
     // Возвращает ранг матрицы
-    int getMatrixRank(const vector2D& matrix) override;
+    int getMatrixRank(const vector2D& iMatrix) override;
 
     // Возвращяет определитель матрицы
-    double getMatrixDet(const vector2D& vec2D) override;
+    double getMatrixDet(const vector2D& iMatrix) override;
 };
