@@ -1,20 +1,25 @@
-#General
-cmake_minimum_required(VERSION 3.0.0)
+if (DEFINED ENV{sCMakeVersion})
+    cmake_minimum_required(VERSION $ENV{sCMakeVersion})
+else()
+    cmake_minimum_required(VERSION 3.16.0)
+endif()
 
 project(RPLM.CAD.ConjugationCurves LANGUAGES C CXX)
 
 find_path(RPLM_CMAKE
-	NAMES 
-	"CMakeCompilerFlags.txt"
-	PATHS
-	# For RPLM.<Project name>/<Main|Dev>
-	"${CMAKE_CURRENT_LIST_DIR}/../../RPLM.Common/CMake"
-	# For RPLM.ALL
-	"${CMAKE_CURRENT_LIST_DIR}/../CMake"
-	# For RPLM.<Project name>/FeatureBranches/<Feature name>
-	"${CMAKE_CURRENT_LIST_DIR}/../../../RPLM.Common/CMake"
-	DOC "Find CMake folder"
-	NO_DEFAULT_PATH
+    NAMES 
+    "CMakeCompilerFlags.txt"
+    PATHS
+    # For RPLM.<Project name>/<Main|Dev>
+    "${CMAKE_CURRENT_LIST_DIR}/../../RPLM.Common/CMake"
+    # For RPLM.ALL
+    "${CMAKE_CURRENT_LIST_DIR}/../CMake"
+    # For RPLM.<Project name>/FeatureBranches/<Feature name>
+    "${CMAKE_CURRENT_LIST_DIR}/../../../RPLM.Common/CMake"
+    #For ~rplm.tp~ model
+    "${CMAKE_CURRENT_LIST_DIR}/../../RPLM.BuildSystem/CMake"
+    DOC "Find CMake folder"
+    NO_DEFAULT_PATH
     NO_CMAKE_ENVIRONMENT_PATH
     NO_CMAKE_PATH
     NO_SYSTEM_ENVIRONMENT_PATH

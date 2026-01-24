@@ -11,6 +11,6 @@ public:
     // Возвращает ранг матрицы
     int getMatrixRank(const vector2D& iMatrix) override;
 
-    // Возвращяет определитель матрицы
+    // Возвращает определитель матрицы
     double getMatrixDet(const vector2D& iMatrix) override;
 };

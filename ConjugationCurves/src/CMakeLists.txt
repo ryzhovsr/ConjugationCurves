@@ -1,4 +1,4 @@
-﻿CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+﻿cmake_minimum_required(VERSION 3.16.0)
 
 SET(PROJECT_NAME RPLM.CAD.ConjugationCurves)
 
@@ -44,20 +44,26 @@ target_include_directories(${PROJECT_NAME}
 		Include
 		${RPLM_INCLUDE_DIR}
 		${RPLM_INCLUDE_DIR}/FPlatform
-		${RPLM_INCLUDE_DIR}/RPLM.Math.Kernel3D
-		${RPLM_INCLUDE_DIR}/RPLM.Math.Geometry2D
-		${RPLM_INCLUDE_DIR}/RPLM.Utils.OS
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Common
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Graphics
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Mesh
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Mesh/Interface
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Model
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Model/Model
-		${RPLM_INCLUDE_DIR}/RPLM.Shell.UI
-		${RPLM_INCLUDE_DIR}/RPLM.EP.UI
-		${RPLM_INCLUDE_DIR}/RPLM.EP.Widgets		
-		${RPLM_INCLUDE_DIR}/RPLM.UI.Widgets
-		${RPLM_INCLUDE_DIR}/RPLM.Base.Framework		
+        ${RPLM_INCLUDE_DIR}/RPLM.Common
+        ${RPLM_INCLUDE_DIR}/RPLM.Common/RPLM.Shell.UI
+        ${RPLM_INCLUDE_DIR}/RPLM.Common/RPLM.UI.Widgets
+        ${RPLM_INCLUDE_DIR}/RPLM.Common/RPLM.Base.Framework
+        ${RPLM_INCLUDE_DIR}/RPLM.Common/RPLM.Utils.XML
+        ${RPLM_INCLUDE_DIR}/RPLM.Common/RPLM.Utils.OS
+        ${RPLM_INCLUDE_DIR}/RPLM.GeomCore
+        ${RPLM_INCLUDE_DIR}/RPLM.GeomCore/RPLM.Math.ConstraintSolver3D
+        ${RPLM_INCLUDE_DIR}/RPLM.GeomCore/RPLM.Math.Kernel3D
+        ${RPLM_INCLUDE_DIR}/RPLM.GeomCore/RPLM.Math.Geometry2D
+        ${RPLM_INCLUDE_DIR}/RPLM.GeomCore/RPLM.Math.Voxel
+        ${RPLM_INCLUDE_DIR}/RPLM.EP
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Common
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Graphics
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Mesh
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Mesh/Interface
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Model
+        ${RPLM_INCLUDE_DIR}/RPLM.EP.Widgets
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.Model/Model
+        ${RPLM_INCLUDE_DIR}/RPLM.EP/RPLM.EP.UI	
 	PRIVATE 
 		${CMAKE_CURRENT_SOURCE_DIR}
 		Source 
