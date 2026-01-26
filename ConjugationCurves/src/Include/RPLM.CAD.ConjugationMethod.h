@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <Geometry/Curves/NURBSCurve.h>
 #include <Geometry/RGPGeometryForward.h>
@@ -10,65 +10,65 @@ namespace RPLM::CAD
 		class ConjugationMethod
 		{
 		public:
-			/// <summary>Сопряжение кривой с дополнительными ограничениями в начале и в конце кривой</summary>
-			/// <param name="iCurve">Оригинальная кривая</param>
-			/// <param name="iFixBeginningCurve">Зафиксировать начало кривой</param>
-			/// <param name="iFixEndCurve">Зафиксировать конец кривой</param>
-			/// <returns>Сопряжённая кривая</returns>
+			/// <summary>РЎРѕРїСЂСЏР¶РµРЅРёРµ РєСЂРёРІРѕР№ СЃ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹РјРё РѕРіСЂР°РЅРёС‡РµРЅРёСЏРјРё РІ РЅР°С‡Р°Р»Рµ Рё РІ РєРѕРЅС†Рµ РєСЂРёРІРѕР№</summary>
+			/// <param name="iCurve">РћСЂРёРіРёРЅР°Р»СЊРЅР°СЏ РєСЂРёРІР°СЏ</param>
+			/// <param name="iFixBeginningCurve">Р—Р°С„РёРєСЃРёСЂРѕРІР°С‚СЊ РЅР°С‡Р°Р»Рѕ РєСЂРёРІРѕР№</param>
+			/// <param name="iFixEndCurve">Р—Р°С„РёРєСЃРёСЂРѕРІР°С‚СЊ РєРѕРЅРµС† РєСЂРёРІРѕР№</param>
+			/// <returns>РЎРѕРїСЂСЏР¶С‘РЅРЅР°СЏ РєСЂРёРІР°СЏ</returns>
 			RGK::NURBSCurve conjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve, bool iFixEndCurve);
 
 		private:
-			/// <summary>Разбивает NURBS кривую на кривые Безье</summary>
-			/// <param name="iCurve">Оригинальная кривая</param>
-			/// <returns>Вектор кривых Безье</returns>
+			/// <summary>Р Р°Р·Р±РёРІР°РµС‚ NURBS РєСЂРёРІСѓСЋ РЅР° РєСЂРёРІС‹Рµ Р‘РµР·СЊРµ</summary>
+			/// <param name="iCurve">РћСЂРёРіРёРЅР°Р»СЊРЅР°СЏ РєСЂРёРІР°СЏ</param>
+			/// <returns>Р’РµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ</returns>
 			RGK::Vector<RGK::NURBSCurve> _divideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve);
 
-			/// <summary>Заполнение матрицы коэффициентов</summary>
-			/// <param name="iCoefficientMatrix">Матрица коэффициентов</param>
-			/// <param name="iBasisFuncs">Базисные функции</param>
-			/// <param name="iNumberEpsilons">Количество эпсилон</param>
-			/// <param name="iNumberBreakPoints">Число точек останова</param>
+			/// <summary>Р—Р°РїРѕР»РЅРµРЅРёРµ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ</summary>
+			/// <param name="iCoefficientMatrix">РњР°С‚СЂРёС†Р° РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ</param>
+			/// <param name="iBasisFuncs">Р‘Р°Р·РёСЃРЅС‹Рµ С„СѓРЅРєС†РёРё</param>
+			/// <param name="iNumberEpsilons">РљРѕР»РёС‡РµСЃС‚РІРѕ СЌРїСЃРёР»РѕРЅ</param>
+			/// <param name="iNumberBreakPoints">Р§РёСЃР»Рѕ С‚РѕС‡РµРє РѕСЃС‚Р°РЅРѕРІР°</param>
 			void _fillCoefficientsMatrix(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, size_t iNumberEpsilons, size_t iNumberBreakPoints);
 
-			/// <summary>Фиксирует начало и конец кривой (зануление определенных столбцов и строк у матрицы коэффициентов)</summary>
-			/// <param name="iCoefficientMatrix">Матрица коэффициентов</param>
-			/// <param name="iNumberEpsilons">Количество эпсилон</param>
-			/// <param name="iNumberBasisFuncs">Количество базисных функций</param>
-			/// <param name="iFixBeginningCurve">Зафиксировать начало кривой</param>
-			/// <param name="iFixEndCurve">Зафиксировать конец кривой</param>
+			/// <summary>Р¤РёРєСЃРёСЂСѓРµС‚ РЅР°С‡Р°Р»Рѕ Рё РєРѕРЅРµС† РєСЂРёРІРѕР№ (Р·Р°РЅСѓР»РµРЅРёРµ РѕРїСЂРµРґРµР»РµРЅРЅС‹С… СЃС‚РѕР»Р±С†РѕРІ Рё СЃС‚СЂРѕРє Сѓ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ)</summary>
+			/// <param name="iCoefficientMatrix">РњР°С‚СЂРёС†Р° РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ</param>
+			/// <param name="iNumberEpsilons">РљРѕР»РёС‡РµСЃС‚РІРѕ СЌРїСЃРёР»РѕРЅ</param>
+			/// <param name="iNumberBasisFuncs">РљРѕР»РёС‡РµСЃС‚РІРѕ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№</param>
+			/// <param name="iFixBeginningCurve">Р—Р°С„РёРєСЃРёСЂРѕРІР°С‚СЊ РЅР°С‡Р°Р»Рѕ РєСЂРёРІРѕР№</param>
+			/// <param name="iFixEndCurve">Р—Р°С„РёРєСЃРёСЂРѕРІР°С‚СЊ РєРѕРЅРµС† РєСЂРёРІРѕР№</param>
 			void _fixateCurve(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, size_t iNumberEpsilons, size_t iNumberBasisFuncs, bool iFixBeginningCurve, bool iFixEndCurve);
 
-			/// <summary>Заполняет матрицу свободных членов</summary>
-			/// <param name="iFreeMembersMatrix">Матрица свободных членов</param>
-			/// <param name="iControlPointsBezierCurves">Контрольные точки кривых Безье</param>
-			/// <param name="iBasisFuncs">Базисные функции</param>
-			/// <param name="iReverseBasisFuncs">Обратные базисные функции</param>
-			/// <param name="iNumberEpsilons">Количество эпсилон</param>
+			/// <summary>Р—Р°РїРѕР»РЅСЏРµС‚ РјР°С‚СЂРёС†Сѓ СЃРІРѕР±РѕРґРЅС‹С… С‡Р»РµРЅРѕРІ</summary>
+			/// <param name="iFreeMembersMatrix">РњР°С‚СЂРёС†Р° СЃРІРѕР±РѕРґРЅС‹С… С‡Р»РµРЅРѕРІ</param>
+			/// <param name="iControlPointsBezierCurves">РљРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РєСЂРёРІС‹С… Р‘РµР·СЊРµ</param>
+			/// <param name="iBasisFuncs">Р‘Р°Р·РёСЃРЅС‹Рµ С„СѓРЅРєС†РёРё</param>
+			/// <param name="iReverseBasisFuncs">РћР±СЂР°С‚РЅС‹Рµ Р±Р°Р·РёСЃРЅС‹Рµ С„СѓРЅРєС†РёРё</param>
+			/// <param name="iNumberEpsilons">РљРѕР»РёС‡РµСЃС‚РІРѕ СЌРїСЃРёР»РѕРЅ</param>
 			void _fillFreeMemberMatrix(RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix, const RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iReverseBasisFuncs, size_t iNumberEpsilons);
 
-			/// <summary>Вычисляет точки сдвига для полного сопряжения кривой</summary>
-			/// <param name="iCoefficientMatrix">Матрица коэффициентов</param>
-			/// <param name="iFreeMembersMatrix">Матрица свободных членов</param>
-			/// <returns>Точки сдвига</returns>
+			/// <summary>Р’С‹С‡РёСЃР»СЏРµС‚ С‚РѕС‡РєРё СЃРґРІРёРіР° РґР»СЏ РїРѕР»РЅРѕРіРѕ СЃРѕРїСЂСЏР¶РµРЅРёСЏ РєСЂРёРІРѕР№</summary>
+			/// <param name="iCoefficientMatrix">РњР°С‚СЂРёС†Р° РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ</param>
+			/// <param name="iFreeMembersMatrix">РњР°С‚СЂРёС†Р° СЃРІРѕР±РѕРґРЅС‹С… С‡Р»РµРЅРѕРІ</param>
+			/// <returns>РўРѕС‡РєРё СЃРґРІРёРіР°</returns>
 			RGK::Vector<RGK::Vector<double>> _calculateShiftPoints(const RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, const RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix);
 
-			/// <summary>Регулирует котрольные точки кривых Безье</summary>
-			/// <param name="iControlPointsBezierCurves">Контрольные точки кривых Безье</param>
-			/// <param name="iShiftPoints">Точки сдвига</param>
-			/// <param name="iNumberBezierCurves">Количество контрольных точек</param>
+			/// <summary>Р РµРіСѓР»РёСЂСѓРµС‚ РєРѕС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РєСЂРёРІС‹С… Р‘РµР·СЊРµ</summary>
+			/// <param name="iControlPointsBezierCurves">РљРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РєСЂРёРІС‹С… Р‘РµР·СЊРµ</param>
+			/// <param name="iShiftPoints">РўРѕС‡РєРё СЃРґРІРёРіР°</param>
+			/// <param name="iNumberBezierCurves">РљРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє</param>
 			void _adjustControlPoints(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iShiftPoints, size_t iNumberBezierCurves);
 			
-			/// <summary>Создаёт вектор кривых Безье из заданного вектора контрольных многоугольников кривых Безье</summary>
-			/// <param name="iControlPointsBezierCurves">Контрольные точки кривых Безье</param>
-			/// <param name="iNumberBezierCurves">Количество кривых Безье</param>
-			/// <param name="iDegree">Степень</param>
-			/// <returns>Вектор кривых Безье</returns>
+			/// <summary>РЎРѕР·РґР°С‘С‚ РІРµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ РёР· Р·Р°РґР°РЅРЅРѕРіРѕ РІРµРєС‚РѕСЂР° РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… РјРЅРѕРіРѕСѓРіРѕР»СЊРЅРёРєРѕРІ РєСЂРёРІС‹С… Р‘РµР·СЊРµ</summary>
+			/// <param name="iControlPointsBezierCurves">РљРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РєСЂРёРІС‹С… Р‘РµР·СЊРµ</param>
+			/// <param name="iNumberBezierCurves">РљРѕР»РёС‡РµСЃС‚РІРѕ РєСЂРёРІС‹С… Р‘РµР·СЊРµ</param>
+			/// <param name="iDegree">РЎС‚РµРїРµРЅСЊ</param>
+			/// <returns>Р’РµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ</returns>
 			RGK::Vector<RGK::NURBSCurve> _createBezierCurves(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, size_t iNumberBezierCurves, int iDegree);
 
-			/// <summary>Переводит вектор кривых Безье в один NURBS</summary>
-			/// <param name="iBezierCurves">Вектор кривых Безье</param>
-			/// <param name="iDegree">Степень</param>
-			/// <returns>Сопряжённая кривая</returns>
+			/// <summary>РџРµСЂРµРІРѕРґРёС‚ РІРµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ РІ РѕРґРёРЅ NURBS</summary>
+			/// <param name="iBezierCurves">Р’РµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ</param>
+			/// <param name="iDegree">РЎС‚РµРїРµРЅСЊ</param>
+			/// <returns>РЎРѕРїСЂСЏР¶С‘РЅРЅР°СЏ РєСЂРёРІР°СЏ</returns>
 			RGK::NURBSCurve _bezierCurvesToNURBS(const RGK::Vector<RGK::NURBSCurve>& iBezierCurves, int iDegree);
 		};
 	}

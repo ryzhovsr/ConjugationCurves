@@ -1,4 +1,4 @@
-#include "RPLM.CAD.ConjugationMethod.h"
+п»ї#include "RPLM.CAD.ConjugationMethod.h"
 #include "RPLM.CAD.IMatrixOperations.h"
 #include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
 #include <RPLM.CAD.NURBSUtils.h>
@@ -7,29 +7,29 @@ namespace RPLM::CAD::ConjugationCurves
 {
     RGK::NURBSCurve ConjugationMethod::conjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve = false, bool iFixEndCurve = false)
     {
-        // Разбиваем NURBS кривую на кривые Безье
+        // Р Р°Р·Р±РёРІР°РµРј NURBS РєСЂРёРІСѓСЋ РЅР° РєСЂРёРІС‹Рµ Р‘РµР·СЊРµ
         RGK::Vector<RGK::NURBSCurve> bezierCurves = _divideCurveIntoBezierCurves(iCurve);
 
-        // Вычисляем базисные функции и их производные оригинальной кривой в параметре 1
+        // Р’С‹С‡РёСЃР»СЏРµРј Р±Р°Р·РёСЃРЅС‹Рµ С„СѓРЅРєС†РёРё Рё РёС… РїСЂРѕРёР·РІРѕРґРЅС‹Рµ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РєСЂРёРІРѕР№ РІ РїР°СЂР°РјРµС‚СЂРµ 1
         double curveParameter = 1;
         RGK::Vector<RGK::Vector<double>> basisFuncs = NURBSUtils::calculateBasisFuncs(bezierCurves[0], curveParameter);
 
-        const size_t NUMBER_BASIS_FUNCS = static_cast<size_t>(iCurve.GetDegree()) + 1;                      // Количество базисных функций
-        const size_t NUMBER_BEZIER_CURVES = bezierCurves.size();                                            // Количество кривых Безье
-        const size_t NUMBER_BREAK_POINTS = NUMBER_BEZIER_CURVES - 1;                                        // Количество потенциальных точек разрыва между кривыми
-        const size_t NUMBER_EPSILONS = bezierCurves.size() * bezierCurves[0].GetControlPoints().size();     // Количество эпсилон, которые будут регулировать контрольные точки
-        const size_t MATRIX_SIZE = NUMBER_BASIS_FUNCS * (2 * NUMBER_BEZIER_CURVES - 1);                     // Размер матрицы коэффициентов
+        const size_t NUMBER_BASIS_FUNCS = static_cast<size_t>(iCurve.GetDegree()) + 1;                      // РљРѕР»РёС‡РµСЃС‚РІРѕ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
+        const size_t NUMBER_BEZIER_CURVES = bezierCurves.size();                                            // РљРѕР»РёС‡РµСЃС‚РІРѕ РєСЂРёРІС‹С… Р‘РµР·СЊРµ
+        const size_t NUMBER_BREAK_POINTS = NUMBER_BEZIER_CURVES - 1;                                        // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕС‚РµРЅС†РёР°Р»СЊРЅС‹С… С‚РѕС‡РµРє СЂР°Р·СЂС‹РІР° РјРµР¶РґСѓ РєСЂРёРІС‹РјРё
+        const size_t NUMBER_EPSILONS = bezierCurves.size() * bezierCurves[0].GetControlPoints().size();     // РљРѕР»РёС‡РµСЃС‚РІРѕ СЌРїСЃРёР»РѕРЅ, РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ СЂРµРіСѓР»РёСЂРѕРІР°С‚СЊ РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё
+        const size_t MATRIX_SIZE = NUMBER_BASIS_FUNCS * (2 * NUMBER_BEZIER_CURVES - 1);                     // Р Р°Р·РјРµСЂ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ
 
-        // Матрица коэффициентов
+        // РњР°С‚СЂРёС†Р° РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ
         RGK::Vector<RGK::Vector<double>> coefficientMatrix(MATRIX_SIZE, RGK::Vector<double>(MATRIX_SIZE));
 
-        // Заполняем матрицу коэффициентов
+        // Р—Р°РїРѕР»РЅСЏРµРј РјР°С‚СЂРёС†Сѓ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ
         _fillCoefficientsMatrix(coefficientMatrix, basisFuncs, NUMBER_EPSILONS, NUMBER_BREAK_POINTS);
 
-        // Фиксируем начало и конец кривой
+        // Р¤РёРєСЃРёСЂСѓРµРј РЅР°С‡Р°Р»Рѕ Рё РєРѕРЅРµС† РєСЂРёРІРѕР№
         _fixateCurve(coefficientMatrix, NUMBER_EPSILONS, NUMBER_BASIS_FUNCS, iFixBeginningCurve, iFixEndCurve);
 
-        // Контрольные точки кривых Безье
+        // РљРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РєСЂРёРІС‹С… Р‘РµР·СЊРµ
         RGK::Vector<RGK::Math::Vector3DArray> controlPointsBezierCurves(NUMBER_BEZIER_CURVES);
 
         for (size_t i = 0; i != NUMBER_BEZIER_CURVES; ++i)
@@ -37,26 +37,26 @@ namespace RPLM::CAD::ConjugationCurves
             controlPointsBezierCurves[i] = bezierCurves[i].GetControlPoints();
         }
 
-        // Матрица свободных членов. RGK::Vector<double>(3) - потому что 3 координаты x, y, z. Можно испрвить в дальнейшем, если узнать тип данных для точки
+        // РњР°С‚СЂРёС†Р° СЃРІРѕР±РѕРґРЅС‹С… С‡Р»РµРЅРѕРІ. RGK::Vector<double>(3) - РїРѕС‚РѕРјСѓ С‡С‚Рѕ 3 РєРѕРѕСЂРґРёРЅР°С‚С‹ x, y, z. РњРѕР¶РЅРѕ РёСЃРїСЂРІРёС‚СЊ РІ РґР°Р»СЊРЅРµР№С€РµРј, РµСЃР»Рё СѓР·РЅР°С‚СЊ С‚РёРї РґР°РЅРЅС‹С… РґР»СЏ С‚РѕС‡РєРё
         RGK::Vector<RGK::Vector<double>> freeMembersMatrix(MATRIX_SIZE, RGK::Vector<double>(3));
 
-        // Вычисляем реверсивные базисные функции и их производные в параметре 0
+        // Р’С‹С‡РёСЃР»СЏРµРј СЂРµРІРµСЂСЃРёРІРЅС‹Рµ Р±Р°Р·РёСЃРЅС‹Рµ С„СѓРЅРєС†РёРё Рё РёС… РїСЂРѕРёР·РІРѕРґРЅС‹Рµ РІ РїР°СЂР°РјРµС‚СЂРµ 0
         curveParameter = 0;
         RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = NURBSUtils::calculateBasisFuncs(bezierCurves[0], curveParameter);
 
-        // Заполняем матрицу свободных членов
+        // Р—Р°РїРѕР»РЅСЏРµРј РјР°С‚СЂРёС†Сѓ СЃРІРѕР±РѕРґРЅС‹С… С‡Р»РµРЅРѕРІ
         _fillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
 
-        // Вычисляем точки смещения для новых контрольных точек
+        // Р’С‹С‡РёСЃР»СЏРµРј С‚РѕС‡РєРё СЃРјРµС‰РµРЅРёСЏ РґР»СЏ РЅРѕРІС‹С… РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє
         RGK::Vector<RGK::Vector<double>> shiftPoints = _calculateShiftPoints(coefficientMatrix, freeMembersMatrix);
 
-        // Делаем сдивг исходных контрольных точек для сопряжения
+        // Р”РµР»Р°РµРј СЃРґРёРІРі РёСЃС…РѕРґРЅС‹С… РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє РґР»СЏ СЃРѕРїСЂСЏР¶РµРЅРёСЏ
         _adjustControlPoints(controlPointsBezierCurves, shiftPoints, NUMBER_BEZIER_CURVES);
 
-        // Вычисляем новые кривые Безье, которые будут непрерывны
+        // Р’С‹С‡РёСЃР»СЏРµРј РЅРѕРІС‹Рµ РєСЂРёРІС‹Рµ Р‘РµР·СЊРµ, РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ РЅРµРїСЂРµСЂС‹РІРЅС‹
         RGK::Vector<RGK::NURBSCurve> newBezierCurves = _createBezierCurves(controlPointsBezierCurves, NUMBER_BEZIER_CURVES, bezierCurves[0].GetDegree());
 
-        // Представляем вектор кривых Безье как одну кривую NURBS
+        // РџСЂРµРґСЃС‚Р°РІР»СЏРµРј РІРµРєС‚РѕСЂ РєСЂРёРІС‹С… Р‘РµР·СЊРµ РєР°Рє РѕРґРЅСѓ РєСЂРёРІСѓСЋ NURBS
         RGK::NURBSCurve merdgedCurve = _bezierCurvesToNURBS(newBezierCurves, bezierCurves[0].GetDegree());
 
         return merdgedCurve;
@@ -64,11 +64,11 @@ namespace RPLM::CAD::ConjugationCurves
 
     RGK::Vector<RGK::NURBSCurve> ConjugationMethod::_divideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve)
     {
-        // Контрольные точки оригинальной кривой
+        // РљРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РєСЂРёРІРѕР№
         RGK::Vector<RGK::Math::Vector3D> controlPointsOriginalCurve = iCurve.GetControlPoints();
         int degree = iCurve.GetDegree();
 
-        // Число кривых Безье, на которые будет разделена оригинальная кривая
+        // Р§РёСЃР»Рѕ РєСЂРёРІС‹С… Р‘РµР·СЊРµ, РЅР° РєРѕС‚РѕСЂС‹Рµ Р±СѓРґРµС‚ СЂР°Р·РґРµР»РµРЅР° РѕСЂРёРіРёРЅР°Р»СЊРЅР°СЏ РєСЂРёРІР°СЏ
         size_t numberBezierCurves = controlPointsOriginalCurve.size() / degree;
         RGK::Vector<RGK::NURBSCurve> bezierCurves(numberBezierCurves);
         RGK::NURBSCurve tempBezierCurve;
@@ -80,7 +80,7 @@ namespace RPLM::CAD::ConjugationCurves
         {
             RGK::Vector<RGK::Math::Vector3D> tempControlPoints;
 
-            // Добавляем по частям контрольные точки оригинальной кривой для каждой отдельной кривой Безье
+            // Р”РѕР±Р°РІР»СЏРµРј РїРѕ С‡Р°СЃС‚СЏРј РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ С‚РѕС‡РєРё РѕСЂРёРіРёРЅР°Р»СЊРЅРѕР№ РєСЂРёРІРѕР№ РґР»СЏ РєР°Р¶РґРѕР№ РѕС‚РґРµР»СЊРЅРѕР№ РєСЂРёРІРѕР№ Р‘РµР·СЊРµ
             for (size_t j = 0; j != static_cast<size_t>(degree) + 1; ++j)
             {
                 tempControlPoints.push_back(controlPointsOriginalCurve[j + i * degree]);
@@ -95,31 +95,31 @@ namespace RPLM::CAD::ConjugationCurves
 
     void ConjugationMethod::_fillCoefficientsMatrix(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, size_t iNumberEpsilons, size_t iNumberBreakPoints)
     {
-        // Заполняем двойками главную диагональ
+        // Р—Р°РїРѕР»РЅСЏРµРј РґРІРѕР№РєР°РјРё РіР»Р°РІРЅСѓСЋ РґРёР°РіРѕРЅР°Р»СЊ
         for (size_t i = 0; i != iNumberEpsilons; ++i)
         {
             iCoefficientMatrix[i][i] = 2;
         }
 
-        // Заполняет элементы матрицы коээфициентов над её главной диагональю
+        // Р—Р°РїРѕР»РЅСЏРµС‚ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС†С‹ РєРѕСЌСЌС„РёС†РёРµРЅС‚РѕРІ РЅР°Рґ РµС‘ РіР»Р°РІРЅРѕР№ РґРёР°РіРѕРЅР°Р»СЊСЋ
         auto fillUpperTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]()  -> void
         {
-            // Количество базисных функций
+            // РљРѕР»РёС‡РµСЃС‚РІРѕ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
             const size_t NUMBER_BASIS_FUNCS = iBasisFuncs.size();
 
-            // Каждый breakPoint - одна итерация заполнения базисных функций в coefficientMatrix
+            // РљР°Р¶РґС‹Р№ breakPoint - РѕРґРЅР° РёС‚РµСЂР°С†РёСЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№ РІ coefficientMatrix
             for (size_t breakPointsCounter = 0; breakPointsCounter != iNumberBreakPoints; ++breakPointsCounter)
             {
-                // Реверс строка для противоположной сторны треугольника
+                // Р РµРІРµСЂСЃ СЃС‚СЂРѕРєР° РґР»СЏ РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕР№ СЃС‚РѕСЂРЅС‹ С‚СЂРµСѓРіРѕР»СЊРЅРёРєР°
                 size_t reverseRow = NUMBER_BASIS_FUNCS * 2 - 1 + NUMBER_BASIS_FUNCS * breakPointsCounter;
                 size_t colBasisFunc = 0;
 
-                // Итерируемся по общему числу базисных функций
+                // РС‚РµСЂРёСЂСѓРµРјСЃСЏ РїРѕ РѕР±С‰РµРјСѓ С‡РёСЃР»Сѓ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
                 for (size_t row = 0 + NUMBER_BASIS_FUNCS * breakPointsCounter; row != NUMBER_BASIS_FUNCS + NUMBER_BASIS_FUNCS * breakPointsCounter; ++row)
                 {
-                    // Строка базисных функций
+                    // РЎС‚СЂРѕРєР° Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
                     size_t rowBasisFunc = 0;
-                    // Предыдущее значение базисной функции (для правильного заполнения коэффициентов с нужным знаком "+" или "-")
+                    // РџСЂРµРґС‹РґСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ Р±Р°Р·РёСЃРЅРѕР№ С„СѓРЅРєС†РёРё (РґР»СЏ РїСЂР°РІРёР»СЊРЅРѕРіРѕ Р·Р°РїРѕР»РЅРµРЅРёСЏ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ СЃ РЅСѓР¶РЅС‹Рј Р·РЅР°РєРѕРј "+" РёР»Рё "-")
                     double prevBasisFuncVal = iBasisFuncs[rowBasisFunc][colBasisFunc];
 
                     for (size_t col = iNumberEpsilons + NUMBER_BASIS_FUNCS * breakPointsCounter; col != iNumberEpsilons + NUMBER_BASIS_FUNCS + NUMBER_BASIS_FUNCS * breakPointsCounter; ++col)
@@ -127,7 +127,7 @@ namespace RPLM::CAD::ConjugationCurves
                         double nextBasisFuncVal = iBasisFuncs[rowBasisFunc][colBasisFunc];
                         iCoefficientMatrix[row][col] = nextBasisFuncVal;
 
-                        // Регулируем знак у противоположной части базисных функций
+                        // Р РµРіСѓР»РёСЂСѓРµРј Р·РЅР°Рє Сѓ РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕР№ С‡Р°СЃС‚Рё Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
                         if (prevBasisFuncVal < 0 && nextBasisFuncVal < 0)
                         {
                             nextBasisFuncVal *= -1;
@@ -148,24 +148,24 @@ namespace RPLM::CAD::ConjugationCurves
             }
         };
 
-        // Заполняет элементы матрицы коээфициентов под её главной диагональю
+        // Р—Р°РїРѕР»РЅСЏРµС‚ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС†С‹ РєРѕСЌСЌС„РёС†РёРµРЅС‚РѕРІ РїРѕРґ РµС‘ РіР»Р°РІРЅРѕР№ РґРёР°РіРѕРЅР°Р»СЊСЋ
         auto fillLowerTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]() -> void
         {
-            // Количество базисных функций
+            // РљРѕР»РёС‡РµСЃС‚РІРѕ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
             const size_t NUMBER_BASIS_FUNCS = iBasisFuncs.size();
 
-            // Каждый breakPoint - одна итерация заполнения базисных функций в coefficientMatrix
+            // РљР°Р¶РґС‹Р№ breakPoint - РѕРґРЅР° РёС‚РµСЂР°С†РёСЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№ РІ coefficientMatrix
             for (size_t breakPointCounter = 0; breakPointCounter != iNumberBreakPoints; ++breakPointCounter)
             {
                 size_t rowBasisFunc = 0;
 
-                // Итерируемся по общему числу базисных функций
+                // РС‚РµСЂРёСЂСѓРµРјСЃСЏ РїРѕ РѕР±С‰РµРјСѓ С‡РёСЃР»Сѓ Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
                 for (size_t row = iNumberEpsilons + NUMBER_BASIS_FUNCS * breakPointCounter; row != iNumberEpsilons + NUMBER_BASIS_FUNCS + NUMBER_BASIS_FUNCS * breakPointCounter; ++row)
                 {
-                    // Реверс столбец для противоположной части
+                    // Р РµРІРµСЂСЃ СЃС‚РѕР»Р±РµС† РґР»СЏ РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕР№ С‡Р°СЃС‚Рё
                     size_t reverseCol = NUMBER_BASIS_FUNCS * 2 - 1 + NUMBER_BASIS_FUNCS * breakPointCounter;
                     size_t colBasisFunc = 0;
-                    // Предыдущее значение базисной функции (для правильного заполнения коэффициентов с нужным знаком "+" или "-")
+                    // РџСЂРµРґС‹РґСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ Р±Р°Р·РёСЃРЅРѕР№ С„СѓРЅРєС†РёРё (РґР»СЏ РїСЂР°РІРёР»СЊРЅРѕРіРѕ Р·Р°РїРѕР»РЅРµРЅРёСЏ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ СЃ РЅСѓР¶РЅС‹Рј Р·РЅР°РєРѕРј "+" РёР»Рё "-")
                     double prevBasisFuncVal = iBasisFuncs[rowBasisFunc][colBasisFunc];
 
                     for (size_t col = 0 + NUMBER_BASIS_FUNCS * breakPointCounter; col != NUMBER_BASIS_FUNCS + NUMBER_BASIS_FUNCS * breakPointCounter; ++col)
@@ -173,7 +173,7 @@ namespace RPLM::CAD::ConjugationCurves
                         double nextBasisFuncVal = iBasisFuncs[rowBasisFunc][colBasisFunc];
                         iCoefficientMatrix[row][col] = nextBasisFuncVal;
 
-                        // Регулируем знак у противоположной части базисных функций
+                        // Р РµРіСѓР»РёСЂСѓРµРј Р·РЅР°Рє Сѓ РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕР№ С‡Р°СЃС‚Рё Р±Р°Р·РёСЃРЅС‹С… С„СѓРЅРєС†РёР№
                         if (prevBasisFuncVal < 0 && nextBasisFuncVal < 0 && col != NUMBER_BASIS_FUNCS * breakPointCounter)
                         {
                             nextBasisFuncVal *= -1;
@@ -194,7 +194,7 @@ namespace RPLM::CAD::ConjugationCurves
             }
         };
 
-        // Заполняем матрицу коэффциентов базисными функциями
+        // Р—Р°РїРѕР»РЅСЏРµРј РјР°С‚СЂРёС†Сѓ РєРѕСЌС„С„С†РёРµРЅС‚РѕРІ Р±Р°Р·РёСЃРЅС‹РјРё С„СѓРЅРєС†РёСЏРјРё
         fillUpperTriangularCoefficientMatrix();
         fillLowerTriangularCoefficientMatrix();
     }
@@ -206,7 +206,7 @@ namespace RPLM::CAD::ConjugationCurves
 
         if (iFixBeginningCurve)
         {
-            // Фиксация первой граничной точки кривой
+            // Р¤РёРєСЃР°С†РёСЏ РїРµСЂРІРѕР№ РіСЂР°РЅРёС‡РЅРѕР№ С‚РѕС‡РєРё РєСЂРёРІРѕР№
             while (orderFixFirstDeriv >= 0)
             {
                 for (size_t row = iNumberEpsilons; row != iNumberEpsilons + iNumberBasisFuncs; ++row)
@@ -227,7 +227,7 @@ namespace RPLM::CAD::ConjugationCurves
         }
 
 
-        // Не работает для 1 порядка производной
+        // РќРµ СЂР°Р±РѕС‚Р°РµС‚ РґР»СЏ 1 РїРѕСЂСЏРґРєР° РїСЂРѕРёР·РІРѕРґРЅРѕР№
         //int tempCounter = 1;
 
         //while (orderFixLastDeriv >= 0)
@@ -254,11 +254,11 @@ namespace RPLM::CAD::ConjugationCurves
             {
                 for (size_t i = 0; i != iControlPointsBezierCurves[0].size(); ++i)
                 {
-                    // Текущая кривая
+                    // РўРµРєСѓС‰Р°СЏ РєСЂРёРІР°СЏ
                     iFreeMembersMatrix[indexFreeMembers][0] += iControlPointsBezierCurves[row][i].GetX() * -iBasisFuncs[rowBasisFunc][i];
                     iFreeMembersMatrix[indexFreeMembers][1] += iControlPointsBezierCurves[row][i].GetY() * -iBasisFuncs[rowBasisFunc][i];
                     iFreeMembersMatrix[indexFreeMembers][2] += iControlPointsBezierCurves[row][i].GetZ() * -iBasisFuncs[rowBasisFunc][i];
-                    // Следующая кривая
+                    // РЎР»РµРґСѓСЋС‰Р°СЏ РєСЂРёРІР°СЏ
                     iFreeMembersMatrix[indexFreeMembers][0] += iControlPointsBezierCurves[row + 1][i].GetX() * iReverseBasisFuncs[rowBasisFunc][i];
                     iFreeMembersMatrix[indexFreeMembers][1] += iControlPointsBezierCurves[row + 1][i].GetY() * iReverseBasisFuncs[rowBasisFunc][i];
                     iFreeMembersMatrix[indexFreeMembers][2] += iControlPointsBezierCurves[row + 1][i].GetZ() * iReverseBasisFuncs[rowBasisFunc][i];
@@ -271,7 +271,7 @@ namespace RPLM::CAD::ConjugationCurves
     }
     RGK::Vector<RGK::Vector<double>> ConjugationMethod::_calculateShiftPoints(const RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, const RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix)
     {
-        // Создаём указатель на интерфейс операций СЛАУ
+        // РЎРѕР·РґР°С‘Рј СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РёРЅС‚РµСЂС„РµР№СЃ РѕРїРµСЂР°С†РёР№ РЎР›РђРЈ
         auto operation = IMatrixOperations::GetMatrixOperationsClass(OperationClass::eigen);
 
         if (operation == nullptr)
@@ -279,15 +279,15 @@ namespace RPLM::CAD::ConjugationCurves
             throw "Error! _calculateShiftPoints: operation = nullptr";
         }
 
-        // Вычисляем определитель матрицы коэффициентов
+        // Р’С‹С‡РёСЃР»СЏРµРј РѕРїСЂРµРґРµР»РёС‚РµР»СЊ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ
         double coefficientMatrixDet = operation->getMatrixDet(iCoefficientMatrix);
 
         if (coefficientMatrixDet == 0)
         {
-            throw "Error! _calculateShiftPoints: Определитель матрицы коэффициентов = 0! Возможно, сделайте меньше фиксированных точек в функции fixPointsAtCurve!";
+            throw "Error! _calculateShiftPoints: РћРїСЂРµРґРµР»РёС‚РµР»СЊ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ = 0! Р’РѕР·РјРѕР¶РЅРѕ, СЃРґРµР»Р°Р№С‚Рµ РјРµРЅСЊС€Рµ С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹С… С‚РѕС‡РµРє РІ С„СѓРЅРєС†РёРё fixPointsAtCurve!";
         }
 
-        // Решаем СЛАУ
+        // Р РµС€Р°РµРј РЎР›РђРЈ
         return operation->solveEquation(iCoefficientMatrix, iFreeMembersMatrix);
     }
 
@@ -315,11 +315,11 @@ namespace RPLM::CAD::ConjugationCurves
 
         for (size_t i = 0; i != iNumberBezierCurves; ++i)
         {
-            // TODO! Не знаю, нужно ли каждый раз пересоздавать rgkContext и прописывать его в NURBSCurve::CreateBezier...
+            // TODO! РќРµ Р·РЅР°СЋ, РЅСѓР¶РЅРѕ Р»Рё РєР°Р¶РґС‹Р№ СЂР°Р· РїРµСЂРµСЃРѕР·РґР°РІР°С‚СЊ rgkContext Рё РїСЂРѕРїРёСЃС‹РІР°С‚СЊ РµРіРѕ РІ NURBSCurve::CreateBezier...
             RGK::Context rgkContext;
             RPLM::EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
 
-            // Создаём новую кривую Безье и добавляем в вектор, чтобы функция возвратила его
+            // РЎРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ РєСЂРёРІСѓСЋ Р‘РµР·СЊРµ Рё РґРѕР±Р°РІР»СЏРµРј РІ РІРµРєС‚РѕСЂ, С‡С‚РѕР±С‹ С„СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‚РёР»Р° РµРіРѕ
             RGK::NURBSCurve::CreateBezier(rgkContext, iControlPointsBezierCurves[i], iDegree, tempBezierCurve);
             newBezierCurves.push_back(tempBezierCurve);
         }
@@ -330,7 +330,7 @@ namespace RPLM::CAD::ConjugationCurves
     RGK::NURBSCurve ConjugationMethod::_bezierCurvesToNURBS(const RGK::Vector<RGK::NURBSCurve>& iBezierCurves, int iDegree)
     {
         RGK::Vector<RGK::Math::Vector3D> newControlPoints;
-        // Для того, чтобы не было повторяющихся точек
+        // Р”Р»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ РїРѕРІС‚РѕСЂСЏСЋС‰РёС…СЃСЏ С‚РѕС‡РµРє
         bool firstCheck = false;
 
         for (size_t curveCount = 0; curveCount != iBezierCurves.size(); ++curveCount)
@@ -351,14 +351,14 @@ namespace RPLM::CAD::ConjugationCurves
                 newControlPoints.push_back(tempControlPoints[i]);
             }
         }
-        // TODO! Не знаю, нужно ли каждый раз пересоздавать rgkContext и прописывать его в NURBSCurve::CreateBezier...
+        // TODO! РќРµ Р·РЅР°СЋ, РЅСѓР¶РЅРѕ Р»Рё РєР°Р¶РґС‹Р№ СЂР°Р· РїРµСЂРµСЃРѕР·РґР°РІР°С‚СЊ rgkContext Рё РїСЂРѕРїРёСЃС‹РІР°С‚СЊ РµРіРѕ РІ NURBSCurve::CreateBezier...
         RGK::Context rgkContext;
         RPLM::EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
 
         Math::Geometry2D::Geometry::DoubleArray knots = NURBSUtils::fillEvenlyNodalVector(iDegree, static_cast<int>(newControlPoints.size()));
 
         RGK::NURBSCurve newCurve;
-        // Создаём новую кривую Безье и добавляем в вектор, чтобы функция возвратила его
+        // РЎРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ РєСЂРёРІСѓСЋ Р‘РµР·СЊРµ Рё РґРѕР±Р°РІР»СЏРµРј РІ РІРµРєС‚РѕСЂ, С‡С‚РѕР±С‹ С„СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‚РёР»Р° РµРіРѕ
         RGK::NURBSCurve::Create(rgkContext, newControlPoints, iDegree, knots, false, newCurve);
 
         return newCurve;

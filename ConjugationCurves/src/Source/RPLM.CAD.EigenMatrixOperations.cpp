@@ -1,4 +1,4 @@
-#include "RPLM.CAD.EigenMatrixOperations.h"
+﻿#include "RPLM.CAD.EigenMatrixOperations.h"
 
 // В ручную привязываю библиотеку Eigen. Изменить если узнать как сделать динамический путь
 #include "Eigen\Dense"
