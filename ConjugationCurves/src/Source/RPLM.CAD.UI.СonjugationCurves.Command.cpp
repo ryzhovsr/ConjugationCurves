@@ -1,7 +1,7 @@
 ﻿#include "RPLM.CAD.UI.СonjugationCurves.Command.h"
 #include "RPLM.CAD.UI.ConjugationCurves.Resources.h"
 #include "RPLM.CAD.ConjugationMethod.h"
-#include "RPLM.CAD.Utils.h"
+#include "RPLM.CAD.CurveParser.h"
 #include "Model/Objects/RGPBodyObject.h"
 #include "Generators/BodyConstructor.h"
 #include "Model/Representations/RGPModelScene.h"
@@ -13,6 +13,7 @@ namespace RPLM::CAD
 	namespace UI
 	{
 		RPLMCADСonjugationCurvesCommand::RPLMCADСonjugationCurvesCommand() :
+			_sourceCurvesFilePath(L"SourceCurvesFilePath", RSCADUIW("RPLM.CAD.FileWithSourceCurves"), L""),
 			_curveDegree(L"CurveDegree", RSCADUIW("CurveDegree")),
 			_controlPointsFilePath(L"ControlPoints", RSCADUIW("ControlPoints"), L""),
 			_knotsFilePath(L"Knots", RSCADUIW("Knots"), L""),
@@ -26,16 +27,16 @@ namespace RPLM::CAD
 			AddOkToDialog(&_dialog);
 			AddCancelToDialog(&_dialog);
 
+			_dialog.AddControl(_sourceCurvesFilePath);
+
 			// Степень кривой
-			_dialog.AddControl(_curveDegree);
+			// _dialog.AddControl(_curveDegree);
 
 			// Контрольные точки
-			_dialog.AddControl(_controlPointsFilePath);
-			_controlPointsFilePath.SelectFile();
+			// _dialog.AddControl(_controlPointsFilePath);
 
 			// Узловой вектор
-			_dialog.AddControl(_knotsFilePath);
-			_knotsFilePath.SelectFile();
+			// _dialog.AddControl(_knotsFilePath);
 
 			// Чекбоксы фиксации начала и конца кривой
 			_dialog.AddControl(_fixBeginningCurve);
@@ -86,39 +87,22 @@ namespace RPLM::CAD
 
 		void RPLMCADСonjugationCurvesCommand::OnOK()
 		{
-			// Получаем имена файлов
-			Base::Framework::String controlPointsPath = _controlPointsFilePath.GetFullName();
-			Base::Framework::String knotsPath = _knotsFilePath.GetFullName();
+			Base::Framework::String sourceCurvesFilePath = _sourceCurvesFilePath.GetFullName();
 
-			const int degree = _curveDegree.GetIntValue();
-
-			if (controlPointsPath.empty() || knotsPath.empty() || degree <= 0)
-			{
+			if (sourceCurvesFilePath.empty())
 				return;
-			}
 
-			// Считываем данные из файлов
-			RGK::Vector<RGK::Math::Vector3D> controlPoints = CAD::Utils::ReadControlPointsFromFile(controlPointsPath);
-			Math::Geometry2D::Geometry::DoubleArray knots = CAD::Utils::ReadKnotsFromFile(knotsPath);
+			RGK::NURBSCurve curve = CAD::CurveParser::ReadCurveFromFile(sourceCurvesFilePath);
 
-			RGK::Context rgkContext;
-			EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
-
-			// Создаём объект исходной кривой
-			RGK::NURBSCurve curve;
-			bool isPeriodic = false;
-
-			if (RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, curve) != RGK::Result::Success)
-			{
+			if (!curve)
 				return;
-			}
 
 			auto conjugationMethod = std::make_unique<CAD::ConjugationCurves::ConjugationMethod>();
 			RGK::NURBSCurve conjugatedCurve = conjugationMethod->ConjugateCurve(curve, _fixBeginningCurve.IsChecked(), _fixEndCurve.IsChecked());
 
 			// Сохраняем в файл, если был активирован чекбокс
 			if (_saveConjugatedCurveInFile.IsChecked())
-				CAD::Utils::SaveCurveInFile(conjugatedCurve, _conjugatedCurveFilePath.GetFullName());
+				CAD::CurveParser::SaveCurveInFile(conjugatedCurve, _conjugatedCurveFilePath.GetFullName());
 			
 			DrawCurve(conjugatedCurve);
 
@@ -209,6 +193,7 @@ namespace RPLM::CAD
 			}
 
 			edit.End(false);
+			return RGK::Success;
 		}
 	}
 }

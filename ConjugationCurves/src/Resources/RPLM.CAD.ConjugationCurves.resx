@@ -123,6 +123,9 @@
   <data name="RPLM.CAD.DrawCurve" xml:space="preserve">
     <value>Сопряжение кривых</value>
   </data>
+  <data name="RPLM.CAD.FileWithSourceCurves" xml:space="preserve">
+    <value>Файл с исходными кривыми</value>
+  </data>
   <data name="RPLM.CAD.SaveConjugatedCurveInFile" xml:space="preserve">
     <value>Сохранить сопряженную кривую в файл</value>
   </data>

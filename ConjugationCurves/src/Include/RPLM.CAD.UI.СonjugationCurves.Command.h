@@ -56,6 +56,9 @@ namespace RPLM::CAD
 			// Диалоговое окно
 			EP::UI::ControlLayout _dialog;
 
+			// Элемент управления для выбора файла с исходными кривыми
+			EP::UI::FileNameControl _sourceCurvesFilePath;
+
 			// Степень кривой
 			EP::UI::EditControl _curveDegree;
 			// Элемент управления для выбора файла с контрольными точками

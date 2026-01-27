@@ -1,7 +1,6 @@
 ﻿#include "RPLM.CAD.ConjugationMethod.h"
 #include "RPLM.CAD.IMatrixOperations.h"
-#include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
-#include <RPLM.CAD.NURBSUtils.h>
+#include "RPLM.CAD.NURBSUtils.h"
 #include "RGPSession.h"
 
 namespace RPLM::CAD::ConjugationCurves
@@ -9,7 +8,7 @@ namespace RPLM::CAD::ConjugationCurves
     RGK::NURBSCurve ConjugationMethod::ConjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve = false, bool iFixEndCurve = false)
     {
         // Разбиваем NURBS кривую на кривые Безье
-        RGK::Vector<RGK::NURBSCurve> bezierCurves = _divideCurveIntoBezierCurves(iCurve);
+        RGK::Vector<RGK::NURBSCurve> bezierCurves = DivideCurveIntoBezierCurves(iCurve);
 
         // Вычисляем базисные функции и их производные оригинальной кривой в параметре 1
         double curveParameter = 1;
@@ -25,10 +24,10 @@ namespace RPLM::CAD::ConjugationCurves
         RGK::Vector<RGK::Vector<double>> coefficientMatrix(MATRIX_SIZE, RGK::Vector<double>(MATRIX_SIZE));
 
         // Заполняем матрицу коэффициентов
-        _fillCoefficientsMatrix(coefficientMatrix, basisFuncs, NUMBER_EPSILONS, NUMBER_BREAK_POINTS);
+        FillCoefficientsMatrix(coefficientMatrix, basisFuncs, NUMBER_EPSILONS, NUMBER_BREAK_POINTS);
 
         // Фиксируем начало и конец кривой
-        _fixateCurve(coefficientMatrix, NUMBER_EPSILONS, NUMBER_BASIS_FUNCS, iFixBeginningCurve, iFixEndCurve);
+        FixateCurve(coefficientMatrix, NUMBER_EPSILONS, NUMBER_BASIS_FUNCS, iFixBeginningCurve, iFixEndCurve);
 
         // Контрольные точки кривых Безье
         RGK::Vector<RGK::Math::Vector3DArray> controlPointsBezierCurves(NUMBER_BEZIER_CURVES);
@@ -38,7 +37,7 @@ namespace RPLM::CAD::ConjugationCurves
             controlPointsBezierCurves[i] = bezierCurves[i].GetControlPoints();
         }
 
-        // Матрица свободных членов. RGK::Vector<double>(3) - потому что 3 координаты x, y, z. Можно испрвить в дальнейшем, если узнать тип данных для точки
+        // Матрица свободных членов. RGK::Vector<double>(3) - потому что 3 координаты x, y, z. Можно исправить в дальнейшем, если узнать тип данных для точки
         RGK::Vector<RGK::Vector<double>> freeMembersMatrix(MATRIX_SIZE, RGK::Vector<double>(3));
 
         // Вычисляем реверсивные базисные функции и их производные в параметре 0
@@ -46,24 +45,24 @@ namespace RPLM::CAD::ConjugationCurves
         RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = NURBSUtils::CalculateBasisFuncs(bezierCurves[0], curveParameter);
 
         // Заполняем матрицу свободных членов
-        _fillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
+        FillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
 
         // Вычисляем точки смещения для новых контрольных точек
-        RGK::Vector<RGK::Vector<double>> shiftPoints = _calculateShiftPoints(coefficientMatrix, freeMembersMatrix);
+        RGK::Vector<RGK::Vector<double>> shiftPoints = CalculateShiftPoints(coefficientMatrix, freeMembersMatrix);
 
-        // Делаем сдивг исходных контрольных точек для сопряжения
-        _adjustControlPoints(controlPointsBezierCurves, shiftPoints, NUMBER_BEZIER_CURVES);
+        // Делаем сдвиг исходных контрольных точек для сопряжения
+        AdjustControlPoints(controlPointsBezierCurves, shiftPoints, NUMBER_BEZIER_CURVES);
 
         // Вычисляем новые кривые Безье, которые будут непрерывны
-        RGK::Vector<RGK::NURBSCurve> newBezierCurves = _createBezierCurves(controlPointsBezierCurves, NUMBER_BEZIER_CURVES, bezierCurves[0].GetDegree());
+        RGK::Vector<RGK::NURBSCurve> newBezierCurves = CreateBezierCurves(controlPointsBezierCurves, NUMBER_BEZIER_CURVES, bezierCurves[0].GetDegree());
 
         // Представляем вектор кривых Безье как одну кривую NURBS
-        RGK::NURBSCurve merdgedCurve = _bezierCurvesToNURBS(newBezierCurves, bezierCurves[0].GetDegree());
+        RGK::NURBSCurve merdgedCurve = BezierCurvesToNURBS(newBezierCurves, bezierCurves[0].GetDegree());
 
         return merdgedCurve;
     }
 
-    RGK::Vector<RGK::NURBSCurve> ConjugationMethod::_divideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve)
+    RGK::Vector<RGK::NURBSCurve> ConjugationMethod::DivideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve)
     {
         // Контрольные точки оригинальной кривой
         RGK::Vector<RGK::Math::Vector3D> controlPointsOriginalCurve = iCurve.GetControlPoints();
@@ -94,7 +93,7 @@ namespace RPLM::CAD::ConjugationCurves
         return bezierCurves;
     }
 
-    void ConjugationMethod::_fillCoefficientsMatrix(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, size_t iNumberEpsilons, size_t iNumberBreakPoints)
+    void ConjugationMethod::FillCoefficientsMatrix(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, size_t iNumberEpsilons, size_t iNumberBreakPoints)
     {
         // Заполняем двойками главную диагональ
         for (size_t i = 0; i != iNumberEpsilons; ++i)
@@ -102,8 +101,8 @@ namespace RPLM::CAD::ConjugationCurves
             iCoefficientMatrix[i][i] = 2;
         }
 
-        // Заполняет элементы матрицы коээфициентов над её главной диагональю
-        auto fillUpperTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]()  -> void
+        // Заполняет элементы матрицы коэффициентов над её главной диагональю
+        auto FillUpperTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]()  -> void
         {
             // Количество базисных функций
             const size_t NUMBER_BASIS_FUNCS = iBasisFuncs.size();
@@ -111,11 +110,11 @@ namespace RPLM::CAD::ConjugationCurves
             // Каждый breakPoint - одна итерация заполнения базисных функций в coefficientMatrix
             for (size_t breakPointsCounter = 0; breakPointsCounter != iNumberBreakPoints; ++breakPointsCounter)
             {
-                // Реверс строка для противоположной сторны треугольника
+                // Реверс строка для противоположной стороны треугольника
                 size_t reverseRow = NUMBER_BASIS_FUNCS * 2 - 1 + NUMBER_BASIS_FUNCS * breakPointsCounter;
                 size_t colBasisFunc = 0;
 
-                // Итерируемся по общему числу базисных функций
+                // Идём по общему числу базисных функций
                 for (size_t row = 0 + NUMBER_BASIS_FUNCS * breakPointsCounter; row != NUMBER_BASIS_FUNCS + NUMBER_BASIS_FUNCS * breakPointsCounter; ++row)
                 {
                     // Строка базисных функций
@@ -149,8 +148,8 @@ namespace RPLM::CAD::ConjugationCurves
             }
         };
 
-        // Заполняет элементы матрицы коээфициентов под её главной диагональю
-        auto fillLowerTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]() -> void
+        // Заполняет элементы матрицы коэффициентов под её главной диагональю
+        auto FillLowerTriangularCoefficientMatrix = [&iCoefficientMatrix, &iBasisFuncs, iNumberEpsilons, iNumberBreakPoints]() -> void
         {
             // Количество базисных функций
             const size_t NUMBER_BASIS_FUNCS = iBasisFuncs.size();
@@ -195,12 +194,12 @@ namespace RPLM::CAD::ConjugationCurves
             }
         };
 
-        // Заполняем матрицу коэффциентов базисными функциями
-        fillUpperTriangularCoefficientMatrix();
-        fillLowerTriangularCoefficientMatrix();
+        // Заполняем матрицу коэффициентов базисными функциями
+        FillUpperTriangularCoefficientMatrix();
+        FillLowerTriangularCoefficientMatrix();
     }
 
-    void ConjugationMethod::_fixateCurve(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, size_t iNumberEpsilons, size_t iNumberBasisFuncs, bool iFixBeginningCurve, bool iFixEndCurve)
+    void ConjugationMethod::FixateCurve(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, size_t iNumberEpsilons, size_t iNumberBasisFuncs, bool iFixBeginningCurve, bool iFixEndCurve)
     {
         int orderFixFirstDeriv = 1;
         int orderFixLastDeriv = 1;
@@ -243,7 +242,7 @@ namespace RPLM::CAD::ConjugationCurves
         //}
     }
 
-    void ConjugationMethod::_fillFreeMemberMatrix(RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix, const RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iReverseBasisFuncs, size_t iNumberEpsilons)
+    void ConjugationMethod::FillFreeMemberMatrix(RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix, const RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iReverseBasisFuncs, size_t iNumberEpsilons)
     {
         size_t indexFreeMembers = iNumberEpsilons;
 
@@ -270,7 +269,7 @@ namespace RPLM::CAD::ConjugationCurves
             }
         }
     }
-    RGK::Vector<RGK::Vector<double>> ConjugationMethod::_calculateShiftPoints(const RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, const RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix)
+    RGK::Vector<RGK::Vector<double>> ConjugationMethod::CalculateShiftPoints(const RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, const RGK::Vector<RGK::Vector<double>>& iFreeMembersMatrix)
     {
         // Создаём указатель на интерфейс операций СЛАУ
         auto operation = IMatrixOperations::GetMatrixOperationsClass(OperationClass::eigen);
@@ -292,7 +291,7 @@ namespace RPLM::CAD::ConjugationCurves
         return operation->SolveEquation(iCoefficientMatrix, iFreeMembersMatrix);
     }
 
-    void ConjugationMethod::_adjustControlPoints(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iShiftPoints, size_t iNumberBezierCurves)
+    void ConjugationMethod::AdjustControlPoints(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iShiftPoints, size_t iNumberBezierCurves)
     {
         int tempCounter = 0;
 
@@ -309,7 +308,7 @@ namespace RPLM::CAD::ConjugationCurves
         }
     }
 
-    RGK::Vector<RGK::NURBSCurve> ConjugationMethod::_createBezierCurves(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, size_t iNumberBezierCurves, int iDegree)
+    RGK::Vector<RGK::NURBSCurve> ConjugationMethod::CreateBezierCurves(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, size_t iNumberBezierCurves, int iDegree)
     {
         RGK::Vector<RGK::NURBSCurve> newBezierCurves;
         RGK::NURBSCurve tempBezierCurve;
@@ -328,7 +327,7 @@ namespace RPLM::CAD::ConjugationCurves
         return newBezierCurves;
     }
 
-    RGK::NURBSCurve ConjugationMethod::_bezierCurvesToNURBS(const RGK::Vector<RGK::NURBSCurve>& iBezierCurves, int iDegree)
+    RGK::NURBSCurve ConjugationMethod::BezierCurvesToNURBS(const RGK::Vector<RGK::NURBSCurve>& iBezierCurves, int iDegree)
     {
         RGK::Vector<RGK::Math::Vector3D> newControlPoints;
         // Для того, чтобы не было повторяющихся точек
