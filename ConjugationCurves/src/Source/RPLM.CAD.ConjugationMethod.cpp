@@ -2,17 +2,18 @@
 #include "RPLM.CAD.IMatrixOperations.h"
 #include "RPLM.Math.ConstraintSolver.EquationSolver/EquationsMatrix.h"
 #include <RPLM.CAD.NURBSUtils.h>
+#include "RGPSession.h"
 
 namespace RPLM::CAD::ConjugationCurves
 {
-    RGK::NURBSCurve ConjugationMethod::conjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve = false, bool iFixEndCurve = false)
+    RGK::NURBSCurve ConjugationMethod::ConjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve = false, bool iFixEndCurve = false)
     {
         // Разбиваем NURBS кривую на кривые Безье
         RGK::Vector<RGK::NURBSCurve> bezierCurves = _divideCurveIntoBezierCurves(iCurve);
 
         // Вычисляем базисные функции и их производные оригинальной кривой в параметре 1
         double curveParameter = 1;
-        RGK::Vector<RGK::Vector<double>> basisFuncs = NURBSUtils::calculateBasisFuncs(bezierCurves[0], curveParameter);
+        RGK::Vector<RGK::Vector<double>> basisFuncs = NURBSUtils::CalculateBasisFuncs(bezierCurves[0], curveParameter);
 
         const size_t NUMBER_BASIS_FUNCS = static_cast<size_t>(iCurve.GetDegree()) + 1;                      // Количество базисных функций
         const size_t NUMBER_BEZIER_CURVES = bezierCurves.size();                                            // Количество кривых Безье
@@ -42,7 +43,7 @@ namespace RPLM::CAD::ConjugationCurves
 
         // Вычисляем реверсивные базисные функции и их производные в параметре 0
         curveParameter = 0;
-        RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = NURBSUtils::calculateBasisFuncs(bezierCurves[0], curveParameter);
+        RGK::Vector<RGK::Vector<double>> reverseBasisFuncs = NURBSUtils::CalculateBasisFuncs(bezierCurves[0], curveParameter);
 
         // Заполняем матрицу свободных членов
         _fillFreeMemberMatrix(freeMembersMatrix, controlPointsBezierCurves, basisFuncs, reverseBasisFuncs, NUMBER_EPSILONS);
@@ -280,7 +281,7 @@ namespace RPLM::CAD::ConjugationCurves
         }
 
         // Вычисляем определитель матрицы коэффициентов
-        double coefficientMatrixDet = operation->getMatrixDet(iCoefficientMatrix);
+        double coefficientMatrixDet = operation->GetMatrixDet(iCoefficientMatrix);
 
         if (coefficientMatrixDet == 0)
         {
@@ -288,7 +289,7 @@ namespace RPLM::CAD::ConjugationCurves
         }
 
         // Решаем СЛАУ
-        return operation->solveEquation(iCoefficientMatrix, iFreeMembersMatrix);
+        return operation->SolveEquation(iCoefficientMatrix, iFreeMembersMatrix);
     }
 
     void ConjugationMethod::_adjustControlPoints(RGK::Vector<RGK::Math::Vector3DArray>& iControlPointsBezierCurves, RGK::Vector<RGK::Vector<double>>& iShiftPoints, size_t iNumberBezierCurves)
@@ -355,7 +356,7 @@ namespace RPLM::CAD::ConjugationCurves
         RGK::Context rgkContext;
         RPLM::EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
 
-        Math::Geometry2D::Geometry::DoubleArray knots = NURBSUtils::fillEvenlyNodalVector(iDegree, static_cast<int>(newControlPoints.size()));
+        Math::Geometry2D::Geometry::DoubleArray knots = NURBSUtils::FillEvenlyNodalVector(iDegree, static_cast<int>(newControlPoints.size()));
 
         RGK::NURBSCurve newCurve;
         // Создаём новую кривую Безье и добавляем в вектор, чтобы функция возвратила его

@@ -1,25 +1,25 @@
 ﻿#pragma once
 
-#include <Common/RPLM.Base.Framework.String.h>
-#include <RGPSession.h>
+#include "Common/RPLM.Base.Framework.String.h"
+#include "RPLM.GeomCore/RPLM.Math.Geometry2D/Geometry/RGPGeometryForward.h"
 
 namespace RPLM::CAD
 {
 	namespace Utils
 	{
-		/// <summary>Считывает контрольные точки из файла </summary>
+		/// <summary>Считывает контрольные точки кривой из файла</summary>
 		/// <param name="iFilePath">Путь к файлу</param>
 		/// <returns>Контрольные точки</returns>
-		RGK::Vector<RGK::Math::Vector3D> readControlPointsFromFile(const Base::Framework::String& iFilePath);
+		RGK::Vector<RGK::Math::Vector3D> ReadControlPointsFromFile(const Base::Framework::String& iFilePath);
 
-		/// <summary>Считывает узлы из файла</summary>
+		/// <summary>Считывает узловой вектор из файла</summary>
 		/// <param name="iFilePath">Путь к файлу</param>
-		/// <returns>Вектор узлов</returns>
-		Math::Geometry2D::Geometry::DoubleArray readKnotsFromFile(const Base::Framework::String& iFilePath);
+		/// <returns>Узловой вектор</returns>
+		Math::Geometry2D::Geometry::DoubleArray ReadKnotsFromFile(const Base::Framework::String& iFilePath);
 
-        /// <summary>Сохраняет контрольные точки в файл</summary>
+        /// <summary>Сохраняет данные кривой в файл</summary>
+		/// <param name="iCurve">Кривая</param>
         /// <param name="iFilePath">Путь к файлу</param>
-        /// <param name="iControlPoints">Контрольные точки кривой</param>
-        void saveControlPointsInFile(const RPLM::Base::Framework::String& iFilePath, const RGK::Vector<RGK::Math::Vector3D>& iControlPoints);
+        void SaveCurveInFile(const RGK::NURBSCurve& iCurve, const Base::Framework::String& iFilePath);
 	}
 }

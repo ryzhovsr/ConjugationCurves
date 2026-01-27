@@ -17,15 +17,24 @@ class IMatrixOperations
 public:
     using vector2D = std::vector<std::vector<double>>;
 
-    // Решает СЛАУ
-    virtual vector2D solveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers) = 0;
+    /// <summary>Решает СЛАУ</summary>
+    /// <param name="iCoefficients">Матрица коэффициентов</param>
+    /// <param name="iFreeMembers">Свободные члены</param>
+    /// <returns>Решение СЛАУ</returns>
+    virtual vector2D SolveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers) = 0;
 
-    // Возвращает ранг матрицы
-    virtual int getMatrixRank(const vector2D& iMatrix) = 0;
+    /// <summary>Возвращает ранг матрицы</summary>
+    /// <param name="iMatrix">Матрица</param>
+    /// <returns>Ранг матрицы</returns>
+    virtual int GetMatrixRank(const vector2D& iMatrix) = 0;
 
-    // Возвращает определитель матрицы
-    virtual double getMatrixDet(const vector2D& iMatrix) = 0;
+    /// <summary>Возвращает определитель матрицы</summary>
+    /// <param name="iMatrix">Матрица</param>
+    /// <returns>Определитель матрицы</returns>
+    virtual double GetMatrixDet(const vector2D& iMatrix) = 0;
 
-    // Возвращяет текущую выбранную библиотеку в перечислении
-    static IMatrixOperationsPtr GetMatrixOperationsClass (OperationClass className);
+    /// <summary>Возвращает текущую выбранную библиотеку для решения СЛАУ</summary>
+    /// <param name="iClassName">Название библиотеки</param>
+    /// <returns>Указатель на библиотеку</returns>
+    static IMatrixOperationsPtr GetMatrixOperationsClass(OperationClass iClassName);
 };

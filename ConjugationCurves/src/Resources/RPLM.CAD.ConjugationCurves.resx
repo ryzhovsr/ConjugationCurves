@@ -120,6 +120,15 @@
   <data name="RPLM.CAD.UI.ConjugationCurves" xml:space="preserve">
     <value>Сопряжение кривых</value>
   </data>
+  <data name="RPLM.CAD.DrawCurve" xml:space="preserve">
+    <value>Сопряжение кривых</value>
+  </data>
+  <data name="RPLM.CAD.SaveConjugatedCurveInFile" xml:space="preserve">
+    <value>Сохранить сопряженную кривую в файл</value>
+  </data>
+  <data name="RPLM.CAD.ConjugatedCurveFilePath" xml:space="preserve">
+    <value>Путь к файлу</value>
+  </data>
   <data name="CAD.Modeling.Optional" xml:space="preserve">
     <value>Опционально</value>
     <comment>Группа категории на ленте</comment>
@@ -128,32 +137,14 @@
     <value>Сопряжение кривых</value>
     <comment>ID инструмента</comment>
   </data>
-  <data name="Object" xml:space="preserve">
-    <value>Объект</value>
-  </data>
-  <data name="SelectObject" xml:space="preserve">
-    <value>Выберите объект</value>
-  </data>
-  <data name="ButtonControlFixDerivatives" xml:space="preserve">
-    <value>Зафиксировать производные</value>
-  </data>
   <data name="CurveDegree" xml:space="preserve">
     <value>Степень кривой</value>
-  </data>
-  <data name="GroupCurveParameters" xml:space="preserve">
-    <value>Параметры кривой</value>
   </data>
   <data name="ControlPoints" xml:space="preserve">
     <value>Контрольные точки</value>
   </data>
   <data name="Knots" xml:space="preserve">
     <value>Узловой вектор</value>
-  </data>
-  <data name="FixOrderFirstDeriv" xml:space="preserve">
-    <value>Порядок первой производной</value>
-  </data>
-  <data name="FixOrderLastDeriv" xml:space="preserve">
-    <value>Порядок последней производной</value>
   </data>
   <data name="FixBeginningCurve" xml:space="preserve">
     <value>Зафиксировать начало кривой</value>

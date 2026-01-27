@@ -15,7 +15,7 @@ namespace RPLM::CAD
 			/// <param name="iFixBeginningCurve">Зафиксировать начало кривой</param>
 			/// <param name="iFixEndCurve">Зафиксировать конец кривой</param>
 			/// <returns>Сопряжённая кривая</returns>
-			RGK::NURBSCurve conjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve, bool iFixEndCurve);
+			RGK::NURBSCurve ConjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve, bool iFixEndCurve);
 
 		private:
 			/// <summary>Разбивает NURBS кривую на кривые Безье</summary>

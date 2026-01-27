@@ -1,8 +1,8 @@
 ﻿#include "RPLM.CAD.EigenMatrixOperations.h"
 
-IMatrixOperationsPtr IMatrixOperations::GetMatrixOperationsClass(OperationClass className)
+IMatrixOperationsPtr IMatrixOperations::GetMatrixOperationsClass(OperationClass iClassName)
 {
-    switch (className)
+    switch (iClassName)
     {
     case eigen:
         return std::make_shared<EigenMatrixOperations>();

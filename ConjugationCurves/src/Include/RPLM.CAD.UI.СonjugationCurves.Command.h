@@ -6,104 +6,72 @@ namespace RPLM::CAD
 {
 	namespace UI
 	{
-		/// <summary>Класс команды для создания сопряжения кривых</summary>
-		class RPLMCADСonjugationCurvesCommand: public EP::UI::Command
+		/// <summary>Команда сопряжения кривых</summary>
+		class RPLMCADСonjugationCurvesCommand : public EP::UI::Command
 		{
 		public:
-			/// <summary>Конструктор для создания команды сопряжения кривых</summary>
+			/// <summary>Конструктор</summary>
 		 	RPLMCADСonjugationCurvesCommand();
 
 			/// <summary>Деструктор</summary>
 			~RPLMCADСonjugationCurvesCommand();
 
-			/// <summary>Запуск команды</summary>
-			/// <param name="iParameters">Параметры запуска</param>
+			/// <summary>Запуск (начало выполнения) команды</summary>
+			/// <param name="iParameters">Параметры инициализации команды</param>
+			/// <returns>true в случае успешного запуска команды, иначе false</returns>
 			virtual bool Start(EP::UI::StartCommandParameters& iParameters) override;
 
 			/// <summary>Завершение команды</summary>
 			virtual void Finish() override;
 
-			/// <summary>Отработка выбора объекта</summary>
-			/// <param name="iParameters">Информация о выбранных объектах</param>
-			/// <returns>Выбранный объект</param>
-			EP::Model::ObjectSelectionPtr SelectObject(EP::UI::SelectObjectParameters& iParameters) override;
+			/// <summary>Возвращает диалог команды</summary>
+			/// <returns>Диалог команды</returns>
+			virtual RPLM::EP::UI::ControlLayout* GetDialog() override;
 
-			/// <summary>Идентификатор команды</summary>
-			virtual std::string GetID() override { return "RPLM.CAD.ConjugationCurves"; }
-
-			/// <summary>Получить фильтр команды</summary>
-			EP::Model::SelectionFilterPtr GetFilter() const override;
+			/// <summary>Получить идентификатор команды</summary>
+			/// <returns>Идентификатор текущей команды</returns>
+			virtual std::string GetID() override;
 
 		private:
-			/// Обработчик кнопки Ok
-			void onOK(EP::UI::ButtonControl& iControl);
-			
-			/// Обработчик очистки контрола выбора объекта
-			void onClearSelectObjectControl(EP::UI::SingleObjectControl& iControl);
+			/// <summary>Обрабатывает событие нажатия кнопки Ок</summary>
+			void OnOK();
 
-			// void OnFocusSelectObjectControl(EP::UI::SingleObjectControl& iControl);
-
-			// Скрывает/показывает группу элементов фиксации порядка производных
-			// void OnFixateDerivates(EP::UI::ButtonControl& iControl);
-
-			void drawCurve(const RGK::NURBSCurve& iNurbs) const;
-
-			// void OnDischargeSingleObjectElement(EP::UI::SingleObjectControl& iControl);
-			// void OnFocusObjectElement(EP::UI::SingleObjectControl& iControl);			
-			
-			/// Событие о закрытии диалога
+			/// <summary>Обрабатывает событие закрытия диалогового окна</summary>
+			/// <returns>false</returns>
 			bool OnCloseDialog();
 
-			/// Получение диалога команды
-			EP::UI::ControlLayout* GetDialog() override { return &_dialog; }
+			/// <summary>Обрабатывает событие нажатия на кнопку сохранения сопряжённой кривой</summary>
+			/// <param name="iControl">Кнопка, от которой пришло событие</param>
+			void OnSaveConjugatedCurveInFilePressed(EP::UI::ButtonControl& iControl);
 
-			EP::Model::ObjectPtr _selectedCurve;
+			/// <summary>Делает проверку на доступность кнопки Ок</summary>
+			/// <returns>true в случае, если кнопка доступна, иначе false</returns>
+			bool IsOkEnabled();
 
-			/// Диалоговое окно
+			/// <summary>Отображает кривую на сцене</summary>
+			/// <param name="iCurve">Кривая</param>
+			/// <returns>Результат операции</returns>
+			RGK::Result DrawCurve(const RGK::NURBSCurve& iCurve) const;		
+		
+			// Диалоговое окно
 			EP::UI::ControlLayout _dialog;
 
-			/// Контрол "Выбрать объект"
-			EP::UI::SingleObjectControl _selectObjectControl;
-
-			/// Группа параметров кривой
-			EP::UI::ControlGroup _groupCurveParameters;
-
-			/// Степень кривой
+			// Степень кривой
 			EP::UI::EditControl _curveDegree;
+			// Элемент управления для выбора файла с контрольными точками
+			EP::UI::FileNameControl _controlPointsFilePath;
+			// Элемент управления для выбора файла с узловыми вектором
+			EP::UI::FileNameControl _knotsFilePath;
 
-			/// Котролы для чтения из файла
-			EP::UI::FileNameControl _controlPoints;
-			EP::UI::FileNameControl _knots;
-
-			// Контрол фиксации начала и конца кривой
+			// Чекбокс для фиксации начала кривой
 			EP::UI::ButtonControl _fixBeginningCurve;
+			// Чекбокс для фиксации конца кривой
 			EP::UI::ButtonControl _fixEndCurve;
 
-			/// Кнопка и группа для фиксации производных
-			EP::UI::ButtonControl _buttonControlFixDerivatives;
-			EP::UI::ControlGroup _groupFixOrderDerivs;
-			EP::UI::EditControl _fixOrderFirstDeriv;
-			EP::UI::EditControl _fixOrderLastDeriv;
-			
-			EP::Model::SelectionFilterPtr _filter;
-			std::shared_ptr<EP::Model::SelectionContainer> _selected;
-
-			/// Путь к странице
-			EP::Model::ObjectVector _pathToLayout;
-		};		
-
-		class СonjugationCurvesSelectionFilter final : public EP::Model::SelectionFilter
-		{
-		public:
-			СonjugationCurvesSelectionFilter() {}
-			virtual ~СonjugationCurvesSelectionFilter() {}
-
-			bool Is3DSelect() const override
-			{
-				return true;
-			}
-
-			virtual EP::Model::ObjectSelectionPtr Select(const EP::Model::ObjectSelectionPtr& iSelectionObject) const override;
+			// Чекбокс для сохранения сопряжённой в файл
+			EP::UI::ButtonControl _saveConjugatedCurveInFile;
+			// Элемент управления для выбора пути до файла, куда будут записаны данные сопряжённой кривой
+			EP::UI::FileNameControl _conjugatedCurveFilePath;
 		};
 	}
 }

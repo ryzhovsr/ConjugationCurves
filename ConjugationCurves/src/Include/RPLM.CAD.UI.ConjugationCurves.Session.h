@@ -9,7 +9,6 @@ namespace RPLM::CAD
 		class Session
 		{
 		public:
-			// Удаляем кострукторы копирования и перемещения
 			Session(const Session&) = delete;
 			Session& operator=(const Session&) = delete;
 			Session(Session&&) = delete;
@@ -23,6 +22,8 @@ namespace RPLM::CAD
 			// Завершение
 			void Destroy();
 
+			/// <summary>Возвращает название модуля</summary>
+			/// <returns>Название модуля</returns>
 			const RPLM::Base::Framework::String& GetModuleName();
 
 		private:

@@ -1,15 +1,38 @@
 ﻿#include "RPLM.CAD.EigenMatrixOperations.h"
 
-// В ручную привязываю библиотеку Eigen. Изменить если узнать как сделать динамический путь
-#include "Eigen\Dense"
-
-using namespace Eigen;
-
-// Переводит двумерный вектор в матрицу класса Eigen
-inline MatrixXd vector2DToMatrix(const IMatrixOperations::vector2D& iMatrix)
+IMatrixOperations::vector2D EigenMatrixOperations::SolveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers)
 {
-    size_t rows = iMatrix.size(), cols = iMatrix[0].size();
-    MatrixXd matrix = MatrixXd::Constant(rows, cols, 0);
+    // Переводим двумерные векторы в матрицу класса Eigen
+    Eigen::MatrixXd coefficientMatrix = ConvertVector2DToEigenMatrix(iCoefficients);
+    Eigen::MatrixXd freeTermMatrix = ConvertVector2DToEigenMatrix(iFreeMembers);
+
+    // Решаем СЛАУ
+    Eigen::MatrixXd decisionMatrix = Eigen::MatrixXd::Constant(iFreeMembers.size(), iFreeMembers[0].size(), 0);
+    decisionMatrix = coefficientMatrix.lu().solve(freeTermMatrix);
+
+    return ConvertEigenMatrixToVector2D(decisionMatrix);
+}
+
+int EigenMatrixOperations::GetMatrixRank(const vector2D& iMatrix)
+{
+    Eigen::MatrixXd matrix = ConvertVector2DToEigenMatrix(iMatrix);
+    // Используем LU-разложение
+    Eigen::FullPivLU<Eigen::MatrixXd> luDecomp(matrix);
+    return static_cast<int>(luDecomp.rank());
+}
+
+double EigenMatrixOperations::GetMatrixDet(const vector2D& iMatrix)
+{
+    Eigen::MatrixXd matrix = ConvertVector2DToEigenMatrix(iMatrix);
+    return matrix.determinant();
+}
+
+Eigen::MatrixXd EigenMatrixOperations::ConvertVector2DToEigenMatrix(const IMatrixOperations::vector2D& iMatrix)
+{
+    size_t rows = iMatrix.size();
+    size_t cols = iMatrix[0].size();
+
+    Eigen::MatrixXd matrix = Eigen::MatrixXd::Constant(rows, cols, 0);
 
     for (size_t i = 0; i < rows; ++i)
     {
@@ -22,10 +45,11 @@ inline MatrixXd vector2DToMatrix(const IMatrixOperations::vector2D& iMatrix)
     return matrix;
 }
 
-// Переводит матрицу класса Eigen в двумерный вектор
-inline IMatrixOperations::vector2D matrixToVector2D(const MatrixXd& iMatrix)
+IMatrixOperations::vector2D EigenMatrixOperations::ConvertEigenMatrixToVector2D(const Eigen::MatrixXd& iMatrix)
 {
-    auto rows = iMatrix.rows(), cols = iMatrix.cols();
+    auto rows = iMatrix.rows();
+    auto cols = iMatrix.cols();
+
     IMatrixOperations::vector2D vec2D(rows, std::vector<double>(cols));
 
     for (int i = 0; i < rows; ++i)
@@ -37,34 +61,4 @@ inline IMatrixOperations::vector2D matrixToVector2D(const MatrixXd& iMatrix)
     }
 
     return vec2D;
-}
-
-IMatrixOperations::vector2D EigenMatrixOperations::solveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers)
-{
-    // Переводим двумерные векторы в матрицу класса Eigen
-    MatrixXd coefficientMatrix = vector2DToMatrix(iCoefficients);
-    MatrixXd freeTermMatrix = vector2DToMatrix(iFreeMembers);
-
-    // Решаем СЛАУ
-    Eigen::MatrixXd decisionMatrix = Eigen::MatrixXd::Constant(iFreeMembers.size(), iFreeMembers[0].size(), 0);
-    decisionMatrix = coefficientMatrix.lu().solve(freeTermMatrix);
-
-    // Revert convertion
-    vector2D decisionVector2D = matrixToVector2D(decisionMatrix);
-
-    return decisionVector2D;
-}
-
-double EigenMatrixOperations::getMatrixDet(const vector2D& iMatrix)
-{
-    MatrixXd matrix = vector2DToMatrix(iMatrix);
-    return matrix.determinant();
-}
-
-int EigenMatrixOperations::getMatrixRank(const vector2D& iMatrix)
-{
-    MatrixXd m = vector2DToMatrix(iMatrix);
-    // Используем LU-разложение
-    FullPivLU<MatrixXd> lu_decomp(m);
-    return static_cast<int>(lu_decomp.rank());
 }

@@ -1,13 +1,14 @@
 ﻿#include "RPLM.CAD.NURBSUtils.h"
+#include "Geometry/Curves/NURBSCurve.h"
 
 namespace RPLM::CAD
 {
-    Math::Geometry2D::Geometry::DoubleArray NURBSUtils::fillEvenlyNodalVector(int iDegree, int iNumVertices)
+    Math::Geometry2D::Geometry::DoubleArray NURBSUtils::FillEvenlyNodalVector(int iDegree, int iNumControlPoints)
     {
         // Кол-во узлов (длина) реальной части узлового вектора
-        int _numRealRangeKnots = iNumVertices - iDegree + 1;
+        int _numRealRangeKnots = iNumControlPoints - iDegree + 1;
         // Кол-во узлов в узл. векторе
-        int numKnots = iNumVertices + iDegree + 1;
+        int numKnots = iNumControlPoints + iDegree + 1;
 
         // Начало/конец реального диапазона узл. вектора
         int realRangeStart = iDegree;
@@ -29,7 +30,7 @@ namespace RPLM::CAD
         return knots;
     }
 
-    int NURBSUtils::findSpanForParameter(const std::vector<double>& iNodalVector, int iDegree, double iCurveParameter)
+    int NURBSUtils::FindSpanForParameter(const std::vector<double>& iNodalVector, int iDegree, double iCurveParameter)
     {
         size_t numKnots = iNodalVector.size();
 
@@ -64,9 +65,9 @@ namespace RPLM::CAD
         return middle;
     }
 
-    void NURBSUtils::calculateZeroBasisFuncs(RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iTempStorage, RPLM::Math::Geometry2D::Geometry::DoubleArray& iNodalVector, int iDegree, double iCurveParameter)
+    void NURBSUtils::CalculateZeroBasisFuncs(RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iTempStorage, RPLM::Math::Geometry2D::Geometry::DoubleArray& iNodalVector, int iDegree, double iCurveParameter)
     {
-        int span = findSpanForParameter(iNodalVector, iDegree, iCurveParameter);
+        int span = FindSpanForParameter(iNodalVector, iDegree, iCurveParameter);
 
         RGK::Vector<double> left(iDegree + 1), right(iDegree + 1);
         iTempStorage[0][0] = 1;
@@ -96,9 +97,9 @@ namespace RPLM::CAD
         }
     }
 
-    void NURBSUtils::calcDerivsBasisFuncs(RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iTempStorage, int iDegree)
+    void NURBSUtils::CalculateDerivsBasisFuncs(RGK::Vector<RGK::Vector<double>>& iBasisFuncs, RGK::Vector<RGK::Vector<double>>& iTempStorage, int iDegree)
     {
-        // Хранит два вычесленных ряда
+        // Хранит два вычисленных ряда
         RGK::Vector<RGK::Vector<double>> rows(2, RGK::Vector<double>(iDegree + 1));
 
         for (int i = 0; i < iDegree + 1; ++i)
@@ -171,7 +172,7 @@ namespace RPLM::CAD
         }
     }
 
-    RGK::Vector<RGK::Vector<double>> NURBSUtils::calculateBasisFuncs(const RGK::NURBSCurve& iCurve, double iCurveParameter)
+    RGK::Vector<RGK::Vector<double>> NURBSUtils::CalculateBasisFuncs(const RGK::NURBSCurve& iCurve, double iCurveParameter)
     {
         int degree = iCurve.GetDegree();
 
@@ -181,9 +182,9 @@ namespace RPLM::CAD
         RGK::Vector<RGK::Vector<double>> tempStorage(degree + 1, RGK::Vector<double>(degree + 1));
 
         // Вычисляем нулевые базисные функции
-        calculateZeroBasisFuncs(basisFuncs, tempStorage, iCurve.GetKnots(), degree, iCurveParameter);
+        CalculateZeroBasisFuncs(basisFuncs, tempStorage, iCurve.GetKnots(), degree, iCurveParameter);
         // Вычисляем все производные базисных функций
-        calcDerivsBasisFuncs(basisFuncs, tempStorage, degree);
+        CalculateDerivsBasisFuncs(basisFuncs, tempStorage, degree);
 
         double sum = 0;
 
@@ -196,7 +197,7 @@ namespace RPLM::CAD
         // Сумма базисных функций должна = 1
         if (sum < (1 - 1e-10) || (sum > 1 + 1e-10))
         {
-            throw _STR("Ошибка в функции calculateBasisFuncs: cумма базисных функций не равна 1!");
+            throw _STR("Ошибка в функции calculateBasisFuncs: сумма базисных функций не равна 1!");
         }
 
         return basisFuncs;
