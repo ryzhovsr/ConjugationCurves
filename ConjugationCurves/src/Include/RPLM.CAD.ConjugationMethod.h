@@ -10,12 +10,18 @@ namespace RPLM::CAD
 		class ConjugationMethod
 		{
 		public:
-			/// <summary>Сопряжение кривой с дополнительными ограничениями в начале и в конце кривой</summary>
-			/// <param name="iCurve">Оригинальная кривая</param>
+			/// <summary>Сопряжение кривой, состоящей из множества кривых Безье</summary>
+			/// <param name="iCurve">Кривая</param>
 			/// <param name="iFixBeginningCurve">Зафиксировать начало кривой</param>
 			/// <param name="iFixEndCurve">Зафиксировать конец кривой</param>
 			/// <returns>Сопряжённая кривая</returns>
 			RGK::NURBSCurve ConjugateCurve(const RGK::NURBSCurve& iCurve, bool iFixBeginningCurve, bool iFixEndCurve);
+
+			/// <summary>Сопрягает 2 кривых Безье</summary>
+			/// <param name="iCurve1">Первая кривая Безье</param>
+			/// <param name="iCurve2">Вторая кривая Безье</param>
+			/// <returns>Сопряжённая кривая</returns>
+			RGK::NURBSCurve ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2);
 
 		private:
 			/// <summary>Разбивает NURBS кривую на кривые Безье</summary>

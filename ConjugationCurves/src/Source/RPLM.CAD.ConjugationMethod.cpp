@@ -62,6 +62,11 @@ namespace RPLM::CAD::ConjugationCurves
         return merdgedCurve;
     }
 
+    RGK::NURBSCurve ConjugationMethod::ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2)
+    {
+        return RGK::NURBSCurve();
+    }
+
     RGK::Vector<RGK::NURBSCurve> ConjugationMethod::DivideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve)
     {
         // Контрольные точки оригинальной кривой

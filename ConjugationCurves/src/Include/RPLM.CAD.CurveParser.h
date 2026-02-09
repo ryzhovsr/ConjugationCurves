@@ -18,10 +18,10 @@ namespace RPLM::CAD
 		/// <returns>Узловой вектор</returns>
 		static Math::Geometry2D::Geometry::DoubleArray ReadKnotsFromFile(const Base::Framework::String& iFilePath);
 
-		/// <summary>Считывает кривую из файла</summary>
+		/// <summary>Считывает кривые из файла</summary>
 		/// <param name="iFilePath">Путь к файлу</param>
-		/// <returns>Объект считанной кривой. В случае неудачи возвратится nullptr</returns>
-		static RGK::NURBSCurve ReadCurveFromFile(const Base::Framework::String& iFilePath);
+		/// <returns>Массив кривых</returns>
+		static std::vector<RGK::NURBSCurve> ReadCurvesFromFile(const Base::Framework::String& iFilePath);
 
 		/// <summary>Сохраняет данные кривой в файл</summary>
 		/// <param name="iCurve">Кривая</param>

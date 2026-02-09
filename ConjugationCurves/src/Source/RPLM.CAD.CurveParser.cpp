@@ -66,42 +66,106 @@ namespace RPLM::CAD
 		return knots;
 	}
 
-    RGK::NURBSCurve CurveParser::ReadCurveFromFile(const Base::Framework::String& iFilePath)
+    std::vector<RGK::NURBSCurve> CurveParser::ReadCurvesFromFile(const Base::Framework::String& iFilePath)
     {
+        std::vector<RGK::NURBSCurve> curves;
+
         if (iFilePath.empty())
-            return nullptr;
+            return curves;
 
         std::ifstream inStream(iFilePath.c_str());
 
         if (!inStream.is_open())
-            return nullptr;
+            return curves;
 
+        RGK::Context rgkContext;
+        EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
+
+        std::string line;
+
+        // Переменные для текущей считываемой кривой
         int degree = 0;
         bool isPeriodic = false;
         RGK::Math::Vector3DArray controlPoints;
         std::vector<double> weights;
         std::vector<double> knots;
 
-        std::string line;
-        // Ожидаемое количество элементов в соответствующих секциях.
-        // Значение -1 означает "ещё не встречали эту секцию".
+        // Ожидаемые количества элементов
         int expectedControlPoints = -1;
         int expectedWeights = -1;
         int expectedKnots = -1;
 
+        // Счётчики для проверки, когда все данные для кривой собраны
+        bool hasDegree = false;
+        bool hasPeriodic = false;
+        bool hasControlPoints = false;
+        bool hasWeights = false;
+        bool hasKnots = false;
+
+        // Вспомогательная функция для создания кривой из собранных данных
+        auto createCurveIfComplete = [&]() -> bool
+        {
+            if (hasDegree && hasPeriodic && hasControlPoints && hasWeights && hasKnots)
+            {
+                // Проверяем согласованность данных
+                if (controlPoints.size() != static_cast<size_t>(expectedControlPoints) ||
+                    weights.size() != static_cast<size_t>(expectedWeights) ||
+                    knots.size() != static_cast<size_t>(expectedKnots))
+                {
+                    return false;
+                }
+
+                // Создаём NURBS кривую
+                RGK::NURBSCurve curve;
+
+                if (RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, curve) == RGK::Result::Success)
+                {
+                    curves.push_back(curve);
+
+                    // Сбрасываем данные для следующей кривой
+                    degree = 0;
+                    isPeriodic = false;
+                    controlPoints.clear();
+                    weights.clear();
+                    knots.clear();
+                    expectedControlPoints = -1;
+                    expectedWeights = -1;
+                    expectedKnots = -1;
+                    hasDegree = false;
+                    hasPeriodic = false;
+                    hasControlPoints = false;
+                    hasWeights = false;
+                    hasKnots = false;
+
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
         while (std::getline(inStream, line))
         {
-            // Удаляем все пробелы, табуляции и переводы строк слева
+            // Удаляем все пробелы, табуляции и переводы строк слева и справа
             line.erase(0, line.find_first_not_of(" \t\r\n"));
             line.erase(line.find_last_not_of(" \t\r\n") + 1);
 
+            // Если пустая строка, проверяем, не завершилась ли кривая
             if (line.empty())
+            {
+                // Пустая строка может быть разделителем между кривыми
+                createCurveIfComplete();
                 continue;
+            }
 
             // Степень
             if (line.rfind("Degree:", 0) == 0)
             {
+                // Если уже есть данные предыдущей кривой, создаём её
+                createCurveIfComplete();
+
                 degree = std::stoi(line.substr(line.find(':') + 1));
+                hasDegree = true;
                 continue;
             }
 
@@ -110,8 +174,8 @@ namespace RPLM::CAD
             {
                 std::string value = line.substr(line.find(':') + 1);
                 value.erase(0, value.find_first_not_of(" \t"));
-
                 isPeriodic = (value == "true" || value == "1");
+                hasPeriodic = true;
                 continue;
             }
 
@@ -120,24 +184,31 @@ namespace RPLM::CAD
             {
                 auto l = line.find('[');
                 auto r = line.find(']');
-
                 expectedControlPoints = std::stoi(line.substr(l + 1, r - l - 1));
                 controlPoints.reserve(expectedControlPoints);
 
-                for (int i = 0; i != expectedControlPoints; ++i)
+                for (int i = 0; i < expectedControlPoints; ++i)
                 {
+                    // Ошибка чтения
                     if (!std::getline(inStream, line))
-                        return {};
+                        return curves;
 
+                    std::replace(line.begin(), line.end(), ',', ' ');
                     std::istringstream iss(line);
                     double x, y, z;
 
-                    if (!(iss >> x >> y >> z))
-                        return {};
-
-                    controlPoints.push_back(RGK::Math::Vector3D(x, y, z));
+                    if (iss >> x >> y >> z)
+                    {
+                        controlPoints.push_back(RGK::Math::Vector3D(x, y, z));
+                    }
+                    else
+                    {
+                        // Ошибка формата
+                        return curves;
+                    }
                 }
 
+                hasControlPoints = true;
                 continue;
             }
 
@@ -146,12 +217,10 @@ namespace RPLM::CAD
             {
                 auto l = line.find('[');
                 auto r = line.find(']');
-
                 expectedWeights = std::stoi(line.substr(l + 1, r - l - 1));
                 weights.reserve(expectedWeights);
 
-                // читаем до тех пор, пока не соберём все веса
-                while (weights.size() < expectedWeights && std::getline(inStream, line))
+                while (weights.size() < static_cast<size_t>(expectedWeights) && std::getline(inStream, line))
                 {
                     std::replace(line.begin(), line.end(), ',', ' ');
                     std::istringstream iss(line);
@@ -161,9 +230,12 @@ namespace RPLM::CAD
                         weights.push_back(w);
                 }
 
-                if (weights.size() != expectedWeights)
-                    return {};
+                if (weights.size() != static_cast<size_t>(expectedWeights))
+                    return curves; // Ошибка: не все веса считаны
 
+                hasWeights = true;
+
+                // После весов может начинаться следующая кривая
                 continue;
             }
 
@@ -172,11 +244,10 @@ namespace RPLM::CAD
             {
                 auto l = line.find('[');
                 auto r = line.find(']');
-
                 expectedKnots = std::stoi(line.substr(l + 1, r - l - 1));
                 knots.reserve(expectedKnots);
 
-                while (knots.size() < expectedKnots && std::getline(inStream, line))
+                while (knots.size() < static_cast<size_t>(expectedKnots) && std::getline(inStream, line))
                 {
                     std::replace(line.begin(), line.end(), ',', ' ');
                     std::istringstream iss(line);
@@ -186,21 +257,21 @@ namespace RPLM::CAD
                         knots.push_back(k);
                 }
 
-                if (knots.size() != expectedKnots)
-                    return nullptr;
+                // Ошибка: не все узлы считаны
+                if (knots.size() != static_cast<size_t>(expectedKnots))
+                    return curves;
 
+                hasKnots = true;
+
+                // После узлов кривая полностью описана
                 continue;
             }
         }
 
-        RGK::Context rgkContext;
-        EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
-        RGK::NURBSCurve curve;
+        // Проверяем, не осталась ли последняя кривая необработанной
+        createCurveIfComplete();
 
-        if (RGK::NURBSCurve::Create(rgkContext, controlPoints, degree, knots, isPeriodic, curve) != RGK::Result::Success)
-            return nullptr;
-
-        return curve;
+        return curves;
     }
 
 	void CurveParser::SaveCurveInFile(const RGK::NURBSCurve& iCurve, const Base::Framework::String& iFilePath)

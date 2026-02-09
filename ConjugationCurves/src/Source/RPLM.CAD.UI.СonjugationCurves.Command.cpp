@@ -50,6 +50,8 @@ namespace RPLM::CAD
 
 			_ok.PressEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnOK, this);
 			_dialog.OnCloseEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnCloseDialog, this);
+			_sourceCurvesFilePath.LinkChanged = std::bind(&RPLMCADСonjugationCurvesCommand::OnFilePathChanged, this);
+			_conjugatedCurveFilePath.LinkChanged = std::bind(&RPLMCADСonjugationCurvesCommand::OnFilePathChanged, this);
 			_saveConjugatedCurveInFile.PressEvent = std::bind(&RPLMCADСonjugationCurvesCommand::OnSaveConjugatedCurveInFilePressed, this, std::placeholders::_1);
 		}
 
@@ -65,6 +67,8 @@ namespace RPLM::CAD
 			CreateCommandDialog(_dialog, GetMainWindow(), GetDocument());
 			_dialog.NeedToAdjust();
 			_dialog.Show();
+
+			_ok.SetEnabled(IsOkEnabled());
 
 			return true;
 		}
@@ -90,21 +94,48 @@ namespace RPLM::CAD
 			Base::Framework::String sourceCurvesFilePath = _sourceCurvesFilePath.GetFullName();
 
 			if (sourceCurvesFilePath.empty())
+			{
+				EP::UI::Command::Alert(L"Пустой путь к файлу.", AlertType::Error);
 				return;
+			}
 
-			RGK::NURBSCurve curve = CAD::CurveParser::ReadCurveFromFile(sourceCurvesFilePath);
+			std::vector<RGK::NURBSCurve> curves = CAD::CurveParser::ReadCurvesFromFile(sourceCurvesFilePath);
 
-			if (!curve)
+			if (curves.empty())
+			{
+				EP::UI::Command::Alert(L"Ошибка чтения кривых из файла.", AlertType::Error);
 				return;
+			}
 
 			auto conjugationMethod = std::make_unique<CAD::ConjugationCurves::ConjugationMethod>();
-			RGK::NURBSCurve conjugatedCurve = conjugationMethod->ConjugateCurve(curve, _fixBeginningCurve.IsChecked(), _fixEndCurve.IsChecked());
+			RGK::NURBSCurve conjugatedCurve;
 
-			// Сохраняем в файл, если был активирован чекбокс
+			// Сопрягаем 1 кривую
+			if (curves.size() == 1)
+			{
+				conjugatedCurve = conjugationMethod->ConjugateCurve(curves[0], _fixBeginningCurve.IsChecked(), _fixEndCurve.IsChecked());
+			}
+			// Сопрягаем 2 кривые
+			else if (curves.size() == 2 && curves[0] && curves[1])
+			{
+				conjugatedCurve = conjugationMethod->ConjugateCurves(curves[0], curves[2]);
+			}
+			else if (curves.size() > 2)
+			{
+				EP::UI::Command::Alert(L"Ошибка сопряжения, насчитано более двух кривых.", AlertType::Error);
+				return;
+			}
+
+			if (!conjugatedCurve)
+				return;
+
 			if (_saveConjugatedCurveInFile.IsChecked())
 				CAD::CurveParser::SaveCurveInFile(conjugatedCurve, _conjugatedCurveFilePath.GetFullName());
-			
-			DrawCurve(conjugatedCurve);
+
+			if (DrawCurve(conjugatedCurve) != RGK::Success)
+			{
+				EP::UI::Command::Alert(L"Ошибка отображения кривой на сцене.", AlertType::Error);
+			}
 
 			Terminate();
 		}
@@ -115,6 +146,11 @@ namespace RPLM::CAD
 			return false;
 		}
 
+		void RPLMCADСonjugationCurvesCommand::OnFilePathChanged()
+		{
+			_ok.SetEnabled(IsOkEnabled());
+		}
+
 		void RPLMCADСonjugationCurvesCommand::OnSaveConjugatedCurveInFilePressed(EP::UI::ButtonControl& iControl)
 		{
 			_conjugatedCurveFilePath.SetHidden(!iControl.IsChecked());
@@ -123,14 +159,81 @@ namespace RPLM::CAD
 
 		bool RPLMCADСonjugationCurvesCommand::IsOkEnabled()
 		{
-			bool isControlPointsFilePathEmpty = _controlPointsFilePath.GetFullName().empty();
-			bool isKnotsFilePathEmpty = _knotsFilePath.GetFullName().empty();
-			bool isConjugatedCurveFilePathEmpty = false;
+			bool isSourceCurvesFilePathValid = IsFilePathValid(_sourceCurvesFilePath.GetFullName());
+			bool isConjugatedCurveFilePathValid = true;
 
+			// Если активирован чекбокс сохранения сопряжённой кривой в файл
 			if (_saveConjugatedCurveInFile.IsChecked())
-				isConjugatedCurveFilePathEmpty = _conjugatedCurveFilePath.GetFullName().empty();
+			{
+				isConjugatedCurveFilePathValid = IsFilePathValid(_conjugatedCurveFilePath.GetFullName());
+			}
 
-			return !isControlPointsFilePathEmpty && !isKnotsFilePathEmpty && !isConjugatedCurveFilePathEmpty;
+			return isSourceCurvesFilePathValid && isConjugatedCurveFilePathValid;
+		}
+
+		bool RPLMCADСonjugationCurvesCommand::IsFilePathValid(const Base::Framework::String& iFilePath)
+		{
+			// 1. Проверка на пустой путь
+			if (iFilePath.empty())
+			{
+				return false;
+			}
+
+			// 2. Проверка существования файла и возможности открытия
+			std::ifstream inStream(iFilePath.c_str());
+
+			if (!inStream.is_open())
+			{
+				return false;
+			}
+
+			// 3. Проверка, что файл не пустой
+			inStream.seekg(0, std::ios::end);
+
+			if (inStream.tellg() == 0)
+			{
+				inStream.close();
+				return false;
+			}
+
+			// Возвращаем указатель в начало
+			inStream.seekg(0, std::ios::beg);
+
+			// 4. Проверка расширения файла 
+			std::wstring filePath = iFilePath;
+			size_t dotPos = filePath.rfind(L'.');
+
+			if (dotPos != std::wstring::npos)
+			{
+				std::wstring extension = filePath.substr(dotPos);
+				std::wstring allowedExtensions[] = { L".txt" };
+				bool validExtension = false;
+
+				for (const auto& ext : allowedExtensions)
+				{
+					if (_wcsicmp(extension.c_str(), ext.c_str()) == 0)
+					{
+						validExtension = true;
+						break;
+					}
+				}
+
+				if (!validExtension)
+				{
+					inStream.close();
+					return false;
+				}
+			}
+			else
+			{
+				// Файл без расширения - может быть недопустимо
+				inStream.close();
+				return false;
+			}
+
+			inStream.close();
+
+			return true;
 		}
 
 		RGK::Result RPLMCADСonjugationCurvesCommand::DrawCurve(const RGK::NURBSCurve& iCurve) const

@@ -40,6 +40,9 @@ namespace RPLM::CAD
 			/// <returns>false</returns>
 			bool OnCloseDialog();
 
+			/// <summary>Обрабатывает событие изменения пути к файлу в элементах управления</summary>
+			void OnFilePathChanged();
+
 			/// <summary>Обрабатывает событие нажатия на кнопку сохранения сопряжённой кривой</summary>
 			/// <param name="iControl">Кнопка, от которой пришло событие</param>
 			void OnSaveConjugatedCurveInFilePressed(EP::UI::ButtonControl& iControl);
@@ -47,6 +50,11 @@ namespace RPLM::CAD
 			/// <summary>Делает проверку на доступность кнопки Ок</summary>
 			/// <returns>true в случае, если кнопка доступна, иначе false</returns>
 			bool IsOkEnabled();
+
+			/// <summary>Проверяет корректность пути к файлу</summary>
+			/// <param name="iFilePath">Путь к файлу</param>
+			/// <returns>true в случае, если путь корректен, иначе false</returns>
+			bool IsFilePathValid(const Base::Framework::String& iFilePath);
 
 			/// <summary>Отображает кривую на сцене</summary>
 			/// <param name="iCurve">Кривая</param>
