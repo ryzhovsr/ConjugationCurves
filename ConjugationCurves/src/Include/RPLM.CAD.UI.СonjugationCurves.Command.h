@@ -67,6 +67,9 @@ namespace RPLM::CAD
 			// Элемент управления для выбора файла с исходными кривыми
 			EP::UI::FileNameControl _sourceCurvesFilePath;
 
+			// Чекбокс для отображения исходных кривых на сцене
+			EP::UI::ButtonControl _showSourceCurves;
+
 			// Степень кривой
 			EP::UI::EditControl _curveDegree;
 			// Элемент управления для выбора файла с контрольными точками

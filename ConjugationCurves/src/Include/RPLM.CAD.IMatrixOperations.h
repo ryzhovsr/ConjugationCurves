@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <Common/Math/Vector3D.h>
 
 class IMatrixOperations;
 using IMatrixOperationsPtr = std::shared_ptr<IMatrixOperations>;
@@ -22,6 +23,8 @@ public:
     /// <param name="iFreeMembers">Свободные члены</param>
     /// <returns>Решение СЛАУ</returns>
     virtual vector2D SolveEquation(const vector2D& iCoefficients, const vector2D& iFreeMembers) = 0;
+
+    virtual RGK::Math::Vector3DArray SolveEquationNew(const vector2D& iCoefficients, const RGK::Math::Vector3DArray& iFreeMembers) = 0;
 
     /// <summary>Возвращает ранг матрицы</summary>
     /// <param name="iMatrix">Матрица</param>

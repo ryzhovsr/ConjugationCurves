@@ -62,9 +62,166 @@ namespace RPLM::CAD::ConjugationCurves
         return merdgedCurve;
     }
 
-    RGK::NURBSCurve ConjugationMethod::ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2)
+    RGK::NURBSCurve ConjugationMethod::ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2, bool iFixBeginningCurve, bool iFixEndCurve)
     {
-        return RGK::NURBSCurve();
+        if (!iCurve1 || !iCurve2)
+            return nullptr;
+
+        RGK::Math::Vector3DArray controlPoints1 = iCurve1.GetControlPoints();
+        RGK::Math::Vector3DArray controlPoints2 = iCurve2.GetControlPoints();
+        // Кол-во контрольных точек
+        int numControlPoints = 0;
+
+        if (controlPoints1.size() != controlPoints2.size())
+            return nullptr;
+        else
+            numControlPoints = controlPoints1.size();
+
+        // Производные первой кривой
+        RGK::Math::Vector3DArray derivs1(numControlPoints);
+        // Отрицательные дельты контрольных точек первой кривой
+        RGK::Math::Vector3DArray negDerivs1(numControlPoints);
+        // Стартовый индекс начинается с конца
+        int startIndex1 = numControlPoints - 1;
+
+        // Находим дельты для первой кривой
+        for (int i = numControlPoints - 1; i >= 0; --i)
+        {
+            derivs1[numControlPoints - i - 1] = calcDerivLeftBezierCurveForMerger(controlPoints1, i, startIndex1);
+            negDerivs1[numControlPoints - i - 1] = calcNegativeDerivLeftBezierCurveForMerger(controlPoints1, i, startIndex1);
+        }
+
+        // Производные второй кривой
+        RGK::Math::Vector3DArray derivs2(numControlPoints);
+        // Стартовый индекс начинается с начала
+        int startIndex2 = 0;
+
+        // Находим дельты для второй кривой
+        for (int i = 0; i < numControlPoints; ++i)
+            derivs2[i] = calcDerivRightBezierCurveForMerger(controlPoints2, i, startIndex2);
+
+        // Матрица коэффициентов
+        std::vector<std::vector<double>> coefficients(numControlPoints * 3, std::vector<double>(numControlPoints * 3));
+
+        // Заполняем матрицу коэффициентов
+        for (int i = 0; i < numControlPoints * 2; ++i)
+            coefficients[i][i] = 2;
+
+        for (int i = 0; i < numControlPoints; ++i)
+        {
+            int resNum = 0;
+            int counter = 0;
+
+            for (int r = 0; r <= i; ++r)
+            {
+                resNum = pow(-1, r - i) * CalcCombWithoutRepetition(i, r);
+                coefficients[numControlPoints * 2 + i][startIndex1 - i + counter] = resNum;
+                coefficients[numControlPoints * 2 + i][startIndex1 + i - counter + 1] = pow(-1, i % 2 ? 0 : 1) * resNum;
+
+                coefficients[startIndex1 - i + counter][numControlPoints * 2 + i] = resNum;
+                coefficients[startIndex1 + i - counter + 1][numControlPoints * 2 + i] = pow(-1, i % 2 ? 0 : 1) * resNum;
+                ++counter;
+            }
+        }
+
+        if (iFixBeginningCurve)
+        {
+            coefficients[0][0] = 1;
+            coefficients[numControlPoints * 2 - 1][numControlPoints * 2 - 1] = 1;
+        }
+
+        if (iFixEndCurve)
+        {
+            coefficients[0][coefficients[0].size() - 1] = 0;
+            coefficients[numControlPoints * 2 - 1][coefficients[0].size() - 1] = 0;
+        }
+
+        // Матрица свободных членов
+        RGK::Math::Vector3DArray freeMembers(numControlPoints * 3);
+        int counter = 0;
+
+        // Заполняем матрицу свободных членов
+        for (int i = numControlPoints * 2; i < numControlPoints * 3; ++i)
+        {
+            freeMembers[i] = negDerivs1[counter] + derivs2[counter];
+            ++counter;
+        }
+
+        auto operation = IMatrixOperations::GetMatrixOperationsClass(OperationClass::eigen);
+
+        if (operation == nullptr)
+            throw "Error! _calculateShiftPoints: operation = nullptr";
+
+        RGK::Math::Vector3DArray solution = operation->SolveEquationNew(coefficients, freeMembers);
+
+        // Временные точки для расчёта новых контрольных точек
+        RGK::Math::Vector3DArray tempPoints(numControlPoints);
+        RGK::Math::Vector3DArray controlPointsNewCurve(numControlPoints);
+
+        for (int i = 0; i < numControlPoints; ++i)
+        {
+            tempPoints[i] = (controlPoints1[i] + solution[i]);
+        }
+
+        controlPointsNewCurve[0] = tempPoints[0];
+        counter = 1;
+
+        while (counter != numControlPoints)
+        {
+            for (int i = 0; i < numControlPoints - counter; ++i)
+                tempPoints[i] = -1 * tempPoints[i] + 2 * tempPoints[i + 1];
+
+            controlPointsNewCurve[counter] = tempPoints[0];
+            ++counter;
+        }
+
+        // Найдём новые точки двух кривых по отдельности
+        RGK::Math::Vector3DArray newControlPoints1(numControlPoints);
+        RGK::Math::Vector3DArray newControlPoints2(numControlPoints);
+
+        for (int i = 0; i < numControlPoints; ++i)
+        {
+            newControlPoints1[i] = (controlPoints1[i] + solution[i]);
+            newControlPoints2[i] = (controlPoints2[i] + solution[numControlPoints + i]);
+        }
+
+        // Для сплайна из новых точек - было 11 и станет 11 контрольных точек
+        RGK::Math::Vector3DArray answer(newControlPoints1.size() * 2 - 1);
+        std::vector<double> weights(answer.size(), 1);
+
+        for (int i = 0; i < newControlPoints1.size(); ++i)
+        {
+            answer[i] = newControlPoints1[i];
+            answer[newControlPoints1.size() - 1 + i] = newControlPoints2[i];
+        }
+
+        // Находим новые производные для первой кривой
+        for (int i = numControlPoints - 1; i >= 0; --i)
+        {
+            derivs1[numControlPoints - i - 1] = calcDerivLeftBezierCurveForMerger(newControlPoints1, i, startIndex1);
+            negDerivs1[numControlPoints - i - 1] = calcNegativeDerivLeftBezierCurveForMerger(newControlPoints1, i, startIndex1);
+        }
+
+        for (int i = 0; i < numControlPoints; ++i)   // Находим новые производные для второй кривой
+            derivs2[i] = calcDerivRightBezierCurveForMerger(newControlPoints2, i, startIndex2);
+
+        for (int i = 0; i < numControlPoints; ++i)
+        {
+            if (abs(derivs1[i].GetX() - derivs2[i].GetX()) > 0.001 || abs(derivs1[i].GetY() - derivs2[i].GetY()) > 0.001 || abs(derivs1[i].GetZ() - derivs2[i].GetZ()) > 0.001)
+            {
+                throw "Error! attachCurvesUsualMethod: derivsFirstCurve[i] != derivsSecondCurve[i]";
+            }
+        }
+
+        RGK::Context rgkContext;
+        RPLM::EP::Model::Session::GetSession()->GetRGKSession().CreateMainContext(rgkContext);
+
+        Math::Geometry2D::Geometry::DoubleArray knots = NURBSUtils::FillDefaultNodalVector(iCurve1.GetDegree(), static_cast<int>(answer.size()));
+
+        RGK::NURBSCurve newCurve;
+        RGK::NURBSCurve::Create(rgkContext, answer, iCurve1.GetDegree(), knots, false, newCurve);
+
+        return newCurve;
     }
 
     RGK::Vector<RGK::NURBSCurve> ConjugationMethod::DivideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve)
@@ -96,6 +253,35 @@ namespace RPLM::CAD::ConjugationCurves
         }
 
         return bezierCurves;
+    }
+
+    int ConjugationMethod::CalcCombWithoutRepetition(int n, int k)
+    {
+        return k == 0 || k == n ? 1 : CalcCombWithoutRepetition(n - 1, k - 1) * n / k;
+    }
+
+    RGK::Math::Vector3D ConjugationMethod::calcDerivLeftBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex)
+    {
+        if (startIndex == currentIndex)
+            return points[currentIndex];
+        else
+            return calcDerivLeftBezierCurveForMerger(points, currentIndex + 1, startIndex) - calcDerivLeftBezierCurveForMerger(points, currentIndex, startIndex - 1);
+    }
+
+    RGK::Math::Vector3D ConjugationMethod::calcNegativeDerivLeftBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex)
+    {
+        if (startIndex == currentIndex)
+            return -1 * points[currentIndex];
+        else
+            return calcNegativeDerivLeftBezierCurveForMerger(points, currentIndex + 1, startIndex) - calcNegativeDerivLeftBezierCurveForMerger(points, currentIndex, startIndex - 1);
+    }
+
+    RGK::Math::Vector3D ConjugationMethod::calcDerivRightBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex)
+    {
+        if (startIndex == currentIndex)
+            return points[currentIndex];
+        else
+            return calcDerivRightBezierCurveForMerger(points, currentIndex, startIndex + 1) - calcDerivRightBezierCurveForMerger(points, currentIndex - 1, startIndex);
     }
 
     void ConjugationMethod::FillCoefficientsMatrix(RGK::Vector<RGK::Vector<double>>& iCoefficientMatrix, RGK::Vector<RGK::Vector<double>>& iBasisFuncs, size_t iNumberEpsilons, size_t iNumberBreakPoints)

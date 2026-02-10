@@ -129,6 +129,9 @@
   <data name="RPLM.CAD.SaveConjugatedCurveInFile" xml:space="preserve">
     <value>Сохранить сопряженную кривую в файл</value>
   </data>
+  <data name="RPLM.CAD.ShowSourceCurves" xml:space="preserve">
+    <value>Отобразить исходные кривые</value>
+  </data>
   <data name="RPLM.CAD.ConjugatedCurveFilePath" xml:space="preserve">
     <value>Путь к файлу</value>
   </data>

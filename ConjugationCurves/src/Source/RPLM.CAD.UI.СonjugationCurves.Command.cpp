@@ -14,6 +14,7 @@ namespace RPLM::CAD
 	{
 		RPLMCADСonjugationCurvesCommand::RPLMCADСonjugationCurvesCommand() :
 			_sourceCurvesFilePath(L"SourceCurvesFilePath", RSCADUIW("RPLM.CAD.FileWithSourceCurves"), L""),
+			_showSourceCurves(L"ShowSourceCurves", RSCADUIW("RPLM.CAD.ShowSourceCurves"), L"", false, true),
 			_curveDegree(L"CurveDegree", RSCADUIW("CurveDegree")),
 			_controlPointsFilePath(L"ControlPoints", RSCADUIW("ControlPoints"), L""),
 			_knotsFilePath(L"Knots", RSCADUIW("Knots"), L""),
@@ -28,6 +29,7 @@ namespace RPLM::CAD
 			AddCancelToDialog(&_dialog);
 
 			_dialog.AddControl(_sourceCurvesFilePath);
+			_dialog.AddControl(_showSourceCurves);
 
 			// Степень кривой
 			// _dialog.AddControl(_curveDegree);
@@ -118,7 +120,7 @@ namespace RPLM::CAD
 			// Сопрягаем 2 кривые
 			else if (curves.size() == 2 && curves[0] && curves[1])
 			{
-				conjugatedCurve = conjugationMethod->ConjugateCurves(curves[0], curves[2]);
+				conjugatedCurve = conjugationMethod->ConjugateCurves(curves[0], curves[1], _fixBeginningCurve.IsChecked(), _fixEndCurve.IsChecked());
 			}
 			else if (curves.size() > 2)
 			{
@@ -131,6 +133,17 @@ namespace RPLM::CAD
 
 			if (_saveConjugatedCurveInFile.IsChecked())
 				CAD::CurveParser::SaveCurveInFile(conjugatedCurve, _conjugatedCurveFilePath.GetFullName());
+
+			if (_showSourceCurves.IsChecked())
+			{
+				for (const auto& curve : curves)
+				{
+					if (DrawCurve(curve) != RGK::Success)
+					{
+						EP::UI::Command::Alert(L"Ошибка отображения кривой на сцене.", AlertType::Error);
+					}
+				}
+			}
 
 			if (DrawCurve(conjugatedCurve) != RGK::Success)
 			{
@@ -187,19 +200,7 @@ namespace RPLM::CAD
 				return false;
 			}
 
-			// 3. Проверка, что файл не пустой
-			inStream.seekg(0, std::ios::end);
-
-			if (inStream.tellg() == 0)
-			{
-				inStream.close();
-				return false;
-			}
-
-			// Возвращаем указатель в начало
-			inStream.seekg(0, std::ios::beg);
-
-			// 4. Проверка расширения файла 
+			// 3. Проверка расширения файла 
 			std::wstring filePath = iFilePath;
 			size_t dotPos = filePath.rfind(L'.');
 
@@ -226,7 +227,7 @@ namespace RPLM::CAD
 			}
 			else
 			{
-				// Файл без расширения - может быть недопустимо
+				// Файл без расширения
 				inStream.close();
 				return false;
 			}

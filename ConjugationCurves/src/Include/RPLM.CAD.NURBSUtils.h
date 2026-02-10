@@ -14,6 +14,12 @@ namespace RPLM::CAD
         /// <returns>Равномерно заполненный узловой вектор</returns>
         static Math::Geometry2D::Geometry::DoubleArray FillEvenlyNodalVector(int iDegree, int iNumControlPoints);
 
+        /// <summary>Заполняет узловой вектор кривой по умолчанию (0, ..., 0, 0.5, ..., 0.5, 1, ..., 1)</summary>
+        /// <param name="iDegree">Степень кривой</param>
+        /// <param name="iNumControlPoints">Число контрольных точек кривой</param>
+        /// <returns>Равномерно заполненный узловой вектор</returns>
+        static Math::Geometry2D::Geometry::DoubleArray FillDefaultNodalVector(int iDegree, int iNumControlPoints);
+
         /// <summary>Находит номер интервала (спан) для заданного параметра кривой</summary>
         /// <param name="iNodalVector">Узловой вектор</param>
         /// <param name="iDegree">Степень кривой</param>

@@ -30,6 +30,30 @@ namespace RPLM::CAD
         return knots;
     }
 
+    Math::Geometry2D::Geometry::DoubleArray NURBSUtils::FillDefaultNodalVector(int iDegree, int iNumControlPoints)
+    {
+        // Кол-во узлов (длина) реальной части узлового вектора
+        int _numRealRangeKnots = iNumControlPoints - iDegree + 1;
+        // Кол-во узлов в узл. векторе
+        int numKnots = iNumControlPoints + iDegree + 1;
+
+        // Начало/конец реального диапазона узл. вектора
+        int realRangeStart = iDegree;
+        int realRangeEnd = numKnots - iDegree - 1;
+
+        RPLM::Math::Geometry2D::Geometry::DoubleArray knots(numKnots);
+
+        // Заполняем реальный диапазон
+        for (int i = realRangeStart + 1; i < realRangeEnd; ++i)
+            knots[i] = 0.5;
+
+        // Заполняем последние параметры единицами
+        for (size_t i = realRangeEnd; i < knots.size(); ++i)
+            knots[i] = 1;
+
+        return knots;
+    }
+
     int NURBSUtils::FindSpanForParameter(const std::vector<double>& iNodalVector, int iDegree, double iCurveParameter)
     {
         size_t numKnots = iNodalVector.size();

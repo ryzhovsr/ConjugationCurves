@@ -21,13 +21,21 @@ namespace RPLM::CAD
 			/// <param name="iCurve1">Первая кривая Безье</param>
 			/// <param name="iCurve2">Вторая кривая Безье</param>
 			/// <returns>Сопряжённая кривая</returns>
-			RGK::NURBSCurve ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2);
+			RGK::NURBSCurve ConjugateCurves(const RGK::NURBSCurve& iCurve1, const RGK::NURBSCurve& iCurve2, bool iFixBeginningCurve = false, bool iFixEndCurve = false);
 
 		private:
 			/// <summary>Разбивает NURBS кривую на кривые Безье</summary>
 			/// <param name="iCurve">Оригинальная кривая</param>
 			/// <returns>Вектор кривых Безье</returns>
 			RGK::Vector<RGK::NURBSCurve> DivideCurveIntoBezierCurves(const RGK::NURBSCurve& iCurve);
+
+			int CalcCombWithoutRepetition(int n, int k);
+
+			RGK::Math::Vector3D calcDerivLeftBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex);
+
+			RGK::Math::Vector3D calcNegativeDerivLeftBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex);
+
+			RGK::Math::Vector3D calcDerivRightBezierCurveForMerger(const RGK::Math::Vector3DArray& points, int currentIndex, int startIndex);
 
 			/// <summary>Заполнение матрицы коэффициентов</summary>
 			/// <param name="iCoefficientMatrix">Матрица коэффициентов</param>
